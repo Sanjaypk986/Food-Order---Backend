@@ -124,7 +124,7 @@ export const userProfile = async (req, res) => {
     if (!userProfile) {
       return res.status(400).json({ message: "User not found" });
     }
-    res.status(200).json({ success: true, message: "User profile fetched" });
+    res.status(200).json({ success: true, message: "User profile fetched", data:userProfile});
   } catch (error) {
     // send error response
     res

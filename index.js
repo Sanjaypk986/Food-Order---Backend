@@ -4,7 +4,7 @@ import apiRouter from './routes/index.js'
 import { connectDB } from './config/dbConfig.js'
 import cookieParser from 'cookie-parser'
 const app = express()
-const port = 3000
+const port = 4500
 
 // acces req.body
 app.use(express.json())
@@ -13,7 +13,7 @@ app.use(cookieParser())
 // mongodb connection
 connectDB();
 
-app.get('/api', apiRouter)
+app.use('/api', apiRouter)
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
