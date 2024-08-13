@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express from 'express'
 import apiRouter from './routes/index.js'
 import { connectDB } from './config/dbConfig.js'

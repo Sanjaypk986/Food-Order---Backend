@@ -1,3 +1,5 @@
+import mongoose from "mongoose"
+
 const userSchema = new mongoose.Schema({
     name:{
         type:String,
@@ -21,4 +23,4 @@ const userSchema = new mongoose.Schema({
           "https://thumbs.dreamstime.com/b/creative-illustration-default-avatar-profile-placeholder-isolated-background-art-design-grey-photo-blank-template-mockup-144847501.jpg",
       },
   });
-  const User = mongoose.model('User', userSchema);
+ export const User = mongoose.model('User', userSchema);
