@@ -132,3 +132,22 @@ export const userProfile = async (req, res) => {
       .json({ message: error.message || "Internal server error" });
   }
 };
+
+// update user
+export const userUpdate = async (req, res) => {
+  try {
+    // destructure values from req.body
+    const { name, email, mobile, password, profilePic } = req.body;
+    // get user id from params
+    const { userId } = req.params;
+    // find user by id
+    const updatedUser = await User.findByIdAndUpdate(userId,{name, email, mobile, password, profilePic },{new:true})
+
+    res.status(200).json({ success: true, message: "user data updated", data:updatedUser});
+  } catch (error) {
+    // send error response
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};

@@ -18,10 +18,12 @@ export const authuser = (req, res, next) => {
         .json({ succuss: false, message: "unauthoraized user" });
     }
     // to get user data from jwt
-    req.user = tokenVerify;
+    req.user = verifiedToken;
     // next middleware function
     next();
   } catch (error) {
-
+    res
+    .status(error.status || 500)
+    .json({ message: error.message || "interal server error" });
   }
 };
