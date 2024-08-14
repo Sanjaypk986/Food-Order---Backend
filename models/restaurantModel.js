@@ -13,9 +13,11 @@ const restaurantSchema = new mongoose.Schema({
         type:String,
         required:true
     },
-    mobile:{
-        type:String,
-        required:true
+    mobile: {
+        type: String,
+        required: true,
+        unique: true, 
+        match: /^[0-9]{10}$/, 
     },
     image: {
         type: String,

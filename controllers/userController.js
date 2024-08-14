@@ -1,13 +1,14 @@
 import { User } from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateToken.js";
+import { cloudinaryInstance } from "../config/cloudinaryConfig.js";
 
 // create user
 
 export const userCreate = async (req, res) => {
   try {
     // destructure values from req.body
-    const { name, email, mobile, password, profilePic } = req.body;
+    const { name, email, mobile, password} = req.body;
     // validation
     if (!name || !email || !mobile || !password) {
       return res
@@ -21,6 +22,12 @@ export const userCreate = async (req, res) => {
         .status(400)
         .json({ success: false, message: "user already exist" });
     }
+     // Upload an image cloudinary
+     const uploadResult = await cloudinaryInstance.uploader
+     .upload(req.file.path)
+     .catch((error) => {
+       console.log(error);
+     });
     // password hashing
     const salt = 10;
     const hashedPassword = bcrypt.hashSync(password, salt);
@@ -31,8 +38,11 @@ export const userCreate = async (req, res) => {
       email,
       mobile,
       password: hashedPassword,
-      profilePic,
     });
+    // check req.file.path have image url
+    if (uploadResult?.url) {
+      newUser.profilePic = uploadResult.url // assign url to profilePic
+    }
     // save user
     await newUser.save();
     //   authentication using jwt token
@@ -137,11 +147,19 @@ export const userProfile = async (req, res) => {
 export const userUpdate = async (req, res) => {
   try {
     // destructure values from req.body
-    const { name, email, mobile, password, profilePic } = req.body;
+    const { name, email, mobile, password } = req.body;
     // get user id from params
     const { userId } = req.params;
+    const updatedData = {
+      name, email, mobile, password
+    }
+    // check req.file available
+    if (req.file) {
+      const uploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
+      updatedData.profilePic = uploadResult.url //assign url to profilePic
+    }
     // find user by id
-    const updatedUser = await User.findByIdAndUpdate(userId,{name, email, mobile, password, profilePic },{new:true})
+    const updatedUser = await User.findByIdAndUpdate(userId,updatedData,{new:true})
 
     res.status(200).json({ success: true, message: "user data updated", data:updatedUser});
   } catch (error) {
