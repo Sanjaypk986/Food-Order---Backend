@@ -1,5 +1,3 @@
-
-
 import { cloudinaryInstance } from "../config/cloudinaryConfig.js";
 import { Food } from "../models/foodModel.js";
 
@@ -53,15 +51,14 @@ export const foodCreate = async (req, res) => {
 export const foodUpdate = async (req, res) => {
   try {
     // destructure values from req.body
-    const { name, description, category, price, restaurant } = req.body;
+    const { name, description, category, price} = req.body;
     // get food id from params
     const { foodId } = req.params;
     const updateFood = {
       name,
       description,
       category,
-      price,
-      restaurant,
+      price
     };
     // check req.file have image
     if (req.file) {
@@ -86,19 +83,32 @@ export const foodUpdate = async (req, res) => {
   }
 };
 
-// get all food
-export const getAllFoods = async (req, res) => {
+// get food by id
+export const getFoodById = async (req, res) => {
     try {
-
-      // find foods 
-      const getFoodList = await Food.find({})
-      res
-        .status(200)
-        .json({ success: true, message: "food list fetched", data: getFoodList });
+      const { foodId } = req.params;
+      const food = await Food.findById(foodId).populate('restaurant');
+      if (!food) {
+        return res.status(404).json({ success: false, message: "Food item not found" });
+      }
+      res.status(200).json({ success: true, food });
     } catch (error) {
-      // send error response
-      res
-        .status(error.status || 500)
-        .json({ message: error.message || "Internal server error" });
+      res.status(500).json({ message: error.message });
     }
   };
+
+// get all food
+export const getAllFoods = async (req, res) => {
+  try {
+    // find foods
+    const getFoodList = await Food.find({});
+    res
+      .status(200)
+      .json({ success: true, message: "food list fetched", data: getFoodList });
+  } catch (error) {
+    // send error response
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};

@@ -25,4 +25,4 @@ const restaurantSchema = new mongoose.Schema({
           "https://thumbs.wbm.im/pw/small/a652b5289b42e733469e0ec088a24eb1.jpg",
       },
   });
- export const Restaurant = mongoose.model('Restaurant ', restaurantSchema);
+  export const Restaurant = mongoose.model('Restaurant', restaurantSchema);

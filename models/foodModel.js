@@ -26,8 +26,8 @@ const foodSchema = new mongoose.Schema({
   },
   restaurant: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Restaurant",
+    ref: 'Restaurant',  // Make sure this matches the model name exactly
     required: true,
-  },
+  }
 });
 export const Food = mongoose.model("Food", foodSchema);
