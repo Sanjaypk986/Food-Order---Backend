@@ -250,4 +250,34 @@ export const updateItemQuantity = async (req, res) => {
 };
 
 //   get cart details
-export const getCartDetails = async (req, res) => {};
+export const getCartDetails = async (req, res) => {
+  try {
+    // Get user information from auth middleware
+    const userInfo = req.user;
+
+    // Find user by email
+    const user = await User.findOne({ email: userInfo.email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Find the cart for the user
+    const cart = await Cart.findOne({ user: user._id }).populate("items.food");
+    if (!cart) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Cart not found" });
+    }
+
+    // Return cart details
+    res.status(200).json({
+      success: true,
+      message: "Cart details fetched",
+      cart,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
