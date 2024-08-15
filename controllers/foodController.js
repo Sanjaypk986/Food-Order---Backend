@@ -1,8 +1,9 @@
-// create food
+
 
 import { cloudinaryInstance } from "../config/cloudinaryConfig.js";
 import { Food } from "../models/foodModel.js";
 
+// create food
 export const foodCreate = async (req, res) => {
   try {
     // destructure values from req.body
@@ -84,3 +85,20 @@ export const foodUpdate = async (req, res) => {
       .json({ message: error.message || "Internal server error" });
   }
 };
+
+// get all food
+export const getAllFoods = async (req, res) => {
+    try {
+
+      // find foods 
+      const getFoodList = await Food.find({})
+      res
+        .status(200)
+        .json({ success: true, message: "food list fetched", data: getFoodList });
+    } catch (error) {
+      // send error response
+      res
+        .status(error.status || 500)
+        .json({ message: error.message || "Internal server error" });
+    }
+  };
