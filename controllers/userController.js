@@ -45,8 +45,10 @@ export const userCreate = async (req, res) => {
     }
     // save user
     await newUser.save();
+    // to remove password from response 
+    const userResponse = await User.findById(newUser._id).select('-password');
     //   authentication using jwt token
-    const token = generateToken(email);
+    const token = generateToken(email,'user');
     //   send token as cookie
     res.cookie("token", token);
     //   send success response
@@ -55,7 +57,7 @@ export const userCreate = async (req, res) => {
       .json({
         success: true,
         message: "User created successfully",
-        data: newUser,
+        data: userResponse,
       });
   } catch (error) {
     // send error response
@@ -93,7 +95,7 @@ export const loginUser = async (req, res) => {
       });
     }
     //   authentication using jwt token
-    const token = generateToken(email);
+    const token = generateToken(email,'user');
     //   send token as cookie
     res.cookie("token", token);
     //   send success response
@@ -130,11 +132,11 @@ export const userProfile = async (req, res) => {
     // get user id from params
     const { userId } = req.params;
     // find user by id
-    const userProfile = await User.findById(userId).select("-password").populate('address'); // select is used to avoid password as response
-    if (!userProfile) {
+    const user = await User.findById(userId).select("-password").populate('address'); // select is used to avoid password as response
+    if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
-    res.status(200).json({ success: true, message: "User profile fetched", data:userProfile});
+    res.status(200).json({ success: true, message: "User profile fetched", data:user});
   } catch (error) {
     // send error response
     res
