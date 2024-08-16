@@ -130,7 +130,7 @@ export const userProfile = async (req, res) => {
     // get user id from params
     const { userId } = req.params;
     // find user by id
-    const userProfile = await User.findById(userId).select("-password"); // select is used to avoid password as response
+    const userProfile = await User.findById(userId).select("-password").populate('address'); // select is used to avoid password as response
     if (!userProfile) {
       return res.status(400).json({ message: "User not found" });
     }

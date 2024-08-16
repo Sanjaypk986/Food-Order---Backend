@@ -174,9 +174,6 @@ export const searchFoods = async (req, res) => {
     // Fetch matching food items from the database
     const foods = await Food.find(query);
 
-    // Log the query for debugging
-    console.log("Query:", query);
-    console.log("Number of foods found:", foods.length);
 
     // Respond with the results
     res.status(200).json({ success: true, foods });

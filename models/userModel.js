@@ -25,5 +25,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "https://thumbs.dreamstime.com/b/creative-illustration-default-avatar-profile-placeholder-isolated-background-art-design-grey-photo-blank-template-mockup-144847501.jpg",
     },
+    address: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Address'
+    }
 });
  export const User = mongoose.model('User', userSchema);
