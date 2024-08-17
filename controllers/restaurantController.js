@@ -244,3 +244,29 @@ export const getSingleOrder = async(req,res)=> {
     .json({ message: error.message || "Internal server error" });
   }
 }
+
+// confirm order
+export const confirmOrder = async(req,res)=> {
+  try {
+    //  get orderId from params
+    const {orderId} = req.params
+    // find order
+    const confirmOrder= await Order.findById(orderId)
+    if (!confirmOrder) {
+      return res.status(404).json({message:"order not found"})
+    }
+    if (confirmOrder.status ==='Confirmed') {
+      return res.status(400).json({message:"already order confirmed"})
+    }
+    if (confirmOrder.status ==='Pending') {
+      confirmOrder.status = "Confirmed"
+       await confirmOrder.save()
+    }
+   
+    res.status(200).json({success:true, message:"order confirmed", data:confirmOrder})
+  } catch (error) {
+    res
+    .status(error.status || 500)
+    .json({ message: error.message || "Internal server error" });
+  }
+}

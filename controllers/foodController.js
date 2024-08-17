@@ -157,10 +157,17 @@ export const searchFoods = async (req, res) => {
 
     // Handle category query
     if (category) {
-      // Build an array of case-insensitive regex patterns directly from the array
-      query.category = {
-        $in: category.map((cat) => new RegExp(`^${cat}$`, "i")),
-      };
+      if (Array.isArray(category)) {
+        // If category is an array, use it directly
+        query.category = {
+          $in: category.map((cat) => new RegExp(`^${cat}$`, "i")),
+        };
+      } else {
+        // If category is a string, wrap it in an array
+        query.category = {
+          $in: [new RegExp(`^${category}$`, "i")],
+        };
+      }
     }
 
     // Handle price range query
@@ -177,7 +184,6 @@ export const searchFoods = async (req, res) => {
     // Fetch matching food items from the database
     const foods = await Food.find(query);
 
-
     // Respond with the results
     res.status(200).json({ success: true, foods });
   } catch (error) {
@@ -186,3 +192,4 @@ export const searchFoods = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
