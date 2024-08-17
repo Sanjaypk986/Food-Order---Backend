@@ -6,18 +6,16 @@ import { User } from "../models/userModel.js";
 // create order
 export const createOrder = async (req, res) => {
   try {
-    // get user from authUser
     const userInfo = req.user;
-
-    // find user
     const user = await User.findOne({ email: userInfo.email });
+
     if (!user) {
-      res.status(400).json({ message: "user not found" });
+      return res.status(400).json({ message: "User not found" });
     }
-    // find cart using user
+
     const cart = await Cart.findOne({ user: user._id }).populate({
       path: "items.food",
-      select: "restaurant",
+      select: "price restaurant",
     });
 
     if (!cart) {
@@ -25,42 +23,75 @@ export const createOrder = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Cart not found" });
     }
-    // order already exists 
-    const orderExists = await Order.findOne({cart:cart._id})
-    if (orderExists) {
-        return res.status(400).json({success:false, message:"order already placed"})
-    }
 
-    // create new order
-    const newOrder = new Order({
-      cart: cart,
-    });
-    // save newOrder
-    await newOrder.save();
-    // Extract the restaurant ID from the cart items
-    const restaurantId = cart.items[0].food.restaurant;
+    // Group cart items by restaurant
+    const itemsByRestaurant = cart.items.reduce((acc, item) => {
+      const restaurantId = item.food.restaurant.toString();
+      if (!acc[restaurantId]) {
+        acc[restaurantId] = [];
+      }
+      acc[restaurantId].push(item);
+      return acc;
+    }, {});
 
-    // find seller of the restaurant
-    const restaurant = await Restaurant.findById(restaurantId );
-    if (!restaurant) {
-      return res
-        .status(404)
-        .json({ success: false, message: "restaurant not found" });
-    }
-    // Add the new order to the restaurant
-    restaurant.orders.push(newOrder._id);
-    await restaurant.save();
+    // Create orders for each restaurant
+    const orders = [];
+    for (const restaurantId in itemsByRestaurant) {
+      const items = itemsByRestaurant[restaurantId];
 
-    // add orders list to user 
-    user.orders.push(newOrder._id)
-    await user.save();
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Order created successfully",
-        order: newOrder,
+      if (items.length === 0) continue; // Skip empty item lists
+
+      // Validate and calculate total
+      let total = 0;
+      const validatedItems = items.map((item) => {
+        const price = item.food.price; // Access price directly
+        if (
+          isNaN(price) ||
+          price <= 0 ||
+          isNaN(item.quantity) ||
+          item.quantity <= 0
+        ) {
+          console.error(
+            `Invalid item - Price: ${price}, Quantity: ${item.quantity}`
+          );
+          throw new Error("Invalid item price or quantity");
+        }
+        total += price * item.quantity;
+        return {
+          food: item.food,
+          quantity: item.quantity,
+          price: price,
+        };
       });
+
+      const newOrder = new Order({
+        user: user._id,
+        restaurant: restaurantId,
+        items: validatedItems,
+        total: total,
+      });
+
+      await newOrder.save();
+
+      const restaurant = await Restaurant.findById(restaurantId);
+      if (restaurant) {
+        restaurant.orders.push(newOrder._id);
+        await restaurant.save();
+      }
+
+      user.orders.push(newOrder._id);
+      orders.push(newOrder);
+    }
+
+    // Clear the cart
+    await Cart.deleteOne({ _id: cart._id });
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Orders created successfully",
+      orders,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -73,7 +104,7 @@ export const getOrderById = async (req, res) => {
     const { orderId } = req.params;
 
     // find order
-    const order = await Order.findById(orderId).populate("cart");
+    const order = await Order.findById(orderId);
     if (!order) {
       res.status(404).json({ success: false, message: "Order not found" });
     }

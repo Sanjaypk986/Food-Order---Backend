@@ -10,7 +10,7 @@ export const authRestaurant = (req, res, next) => {
         .json({ succuss: false, message: "unauthoraized restaurant" });
     }
     // verify token using jwt verify
-    const verifiedToken = jwt.verify(token, process.env.SELLER_JWT_SECRET_KEY);
+    const verifiedToken = jwt.verify(token, process.env.RESTAURANT_JWT_SECRET_KEY);
 
     if (!verifiedToken) {
       return res

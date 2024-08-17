@@ -1,5 +1,5 @@
 import express from 'express'
-import { loginRestaurant, logoutRestaurant, restaurantCreate, restaurantDelete, restaurantProfile, restaurantUpdate } from '../../controllers/restaurantController.js'
+import { getRestaurantOrders, loginRestaurant, logoutRestaurant, restaurantCreate, restaurantDelete, restaurantProfile, restaurantUpdate } from '../../controllers/restaurantController.js'
 import { upload } from '../../middlewares/uploadMiddleware.js'
 import { authRestaurant } from '../../middlewares/authRestaurant.js'
 
@@ -14,7 +14,7 @@ router.get('/profile/:restaurantId',restaurantProfile)
 router.patch('/update/:restaurantId',authRestaurant,upload.single('restaurantImage'),restaurantUpdate)
 router.delete('/delete/:restaurantId',restaurantDelete)
 
-router.get('/orders',)
+router.get('/orders',authRestaurant,getRestaurantOrders)
 router.get('/orders/:orderId',)
 
 

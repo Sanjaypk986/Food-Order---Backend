@@ -87,7 +87,10 @@ export const foodUpdate = async (req, res) => {
 export const getFoodById = async (req, res) => {
   try {
     const { foodId } = req.params;
-    const food = await Food.findById(foodId).populate("restaurant");
+    const food = await Food.findById(foodId).populate({
+      path: "restaurant",
+      select: "-password -orders -email",
+    });
     if (!food) {
       return res
         .status(404)

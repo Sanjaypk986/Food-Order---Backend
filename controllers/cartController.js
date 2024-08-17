@@ -37,8 +37,8 @@ export const addItem = async (req, res) => {
     // Find the food item by ID and populate its restaurant details
     const food = await Food.findById(foodId).populate({
       path: "restaurant",
-      select: "-password -orders -email" 
-    });;
+      select: "-password -orders -email",
+    });
     if (!food) {
       return res
         .status(404)
@@ -51,6 +51,7 @@ export const addItem = async (req, res) => {
       cart = new Cart({ user: user._id, items: [] });
     }
 
+
     // Check if the food item is already in the cart
     const itemIndex = cart.items.findIndex(
       (item) => item.food.toString() === foodId
@@ -62,7 +63,7 @@ export const addItem = async (req, res) => {
       cart.items.push({ food: food, quantity });
     }
 
-    // Calculate total amount 
+    // Calculate total amount
     let totalAmount = 0;
     for (const item of cart.items) {
       // Ensure the food item is populated
@@ -270,7 +271,7 @@ export const getCartDetails = async (req, res) => {
       populate: {
         path: "restaurant",
         model: "Restaurant",
-        select: "-password -orders -email" 
+        select: "-password -orders -email",
       },
     });
 
@@ -279,13 +280,13 @@ export const getCartDetails = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Cart not found" });
     }
-     // Calculate total amount 
-     let totalAmount = 0;
-     cart.items.forEach(item => {
-       totalAmount += item.food.price * item.quantity;
-     });
- 
-     cart.total = totalAmount;
+    // Calculate total amount
+    let totalAmount = 0;
+    cart.items.forEach((item) => {
+      totalAmount += item.food.price * item.quantity;
+    });
+
+    cart.total = totalAmount;
 
     // Return cart details
     res.status(200).json({
