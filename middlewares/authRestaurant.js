@@ -1,13 +1,13 @@
 import jwt from "jsonwebtoken";
 
-export const authseller = (req, res, next) => {
+export const authRestaurant = (req, res, next) => {
   try {
     // destructure token from cookies
     const { token } = req.cookies;
     if (!token) {
       return res
         .status(401)
-        .json({ succuss: false, message: "unauthoraized seller" });
+        .json({ succuss: false, message: "unauthoraized restaurant" });
     }
     // verify token using jwt verify
     const verifiedToken = jwt.verify(token, process.env.SELLER_JWT_SECRET_KEY);
@@ -15,10 +15,10 @@ export const authseller = (req, res, next) => {
     if (!verifiedToken) {
       return res
         .status(401)
-        .json({ succuss: false, message: "unauthoraized seller" });
+        .json({ succuss: false, message: "unauthoraized restaurant" });
     }
-    // to get seller data from jwt
-    req.seller = verifiedToken;
+    // to get restaurant data from jwt
+    req.restaurant = verifiedToken;
     // next middleware function
     next();
   } catch (error) {

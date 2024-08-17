@@ -35,7 +35,10 @@ export const addItem = async (req, res) => {
     }
 
     // Find the food item by ID and populate its restaurant details
-    const food = await Food.findById(foodId).populate("restaurant");
+    const food = await Food.findById(foodId).populate({
+      path: "restaurant",
+      select: "-password -orders -email" 
+    });;
     if (!food) {
       return res
         .status(404)
@@ -267,6 +270,7 @@ export const getCartDetails = async (req, res) => {
       populate: {
         path: "restaurant",
         model: "Restaurant",
+        select: "-password -orders -email" 
       },
     });
 

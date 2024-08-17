@@ -8,8 +8,8 @@ export const generateToken = (email, role) => {
 
     const secretKey = role === 'user'
       ? process.env.USER_JWT_SECRET_KEY
-      : role === 'seller'
-        ? process.env.SELLER_JWT_SECRET_KEY
+      : role === 'restaurant'
+        ? process.env.RESTAURANT_JWT_SECRET_KEY
         : process.env.ADMIN_JWT_SECRET_KEY;
 
     if (!secretKey) {

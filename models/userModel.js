@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
     address: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Address'
-    }
+    },
+    orders: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order'
+    }]
 });
  export const User = mongoose.model('User', userSchema);
