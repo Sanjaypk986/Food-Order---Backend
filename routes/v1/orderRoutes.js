@@ -7,7 +7,7 @@ const router = express.Router()
 router.post('/create', authuser, createOrder );
 router.get('/:orderId', authuser, getOrderById);
 router.patch('/cancel/:orderId', authuser,cancelOrder );
-router.get('/user/:userId', authuser, );
+router.get('/my-orders', authuser, );
 
 
 

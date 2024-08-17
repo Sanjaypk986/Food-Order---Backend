@@ -225,3 +225,22 @@ export const getRestaurantOrders = async(req,res)=> {
     .json({ message: error.message || "Internal server error" });
   }
 }
+
+// get order by id 
+export const getSingleOrder = async(req,res)=> {
+  try {
+    //  get orderId from params
+    const {orderId} = req.params
+    // find order
+    const singleOrder = await Order.findById(orderId)
+    if (!singleOrder) {
+      res.status(404).json({message:"order not found"})
+    }
+    
+    res.status(200).json({success:true, message:"order details fetched", data:singleOrder})
+  } catch (error) {
+    res
+    .status(error.status || 500)
+    .json({ message: error.message || "Internal server error" });
+  }
+}
