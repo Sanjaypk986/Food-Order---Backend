@@ -24,6 +24,9 @@ export const createOrder = async (req, res) => {
         .json({ success: false, message: "Cart not found" });
     }
 
+    // Assume the cart total has been updated with any applied discount
+    const updatedCartTotal = cart.total;
+
     // Group cart items by restaurant
     const itemsByRestaurant = cart.items.reduce((acc, item) => {
       const restaurantId = item.food.restaurant.toString();
@@ -34,17 +37,17 @@ export const createOrder = async (req, res) => {
       return acc;
     }, {});
 
-    // Create orders for each restaurant
+    // Calculate the discounted total for each restaurant
     const orders = [];
     for (const restaurantId in itemsByRestaurant) {
       const items = itemsByRestaurant[restaurantId];
 
       if (items.length === 0) continue; // Skip empty item lists
 
-      // Validate and calculate total
-      let total = 0;
+      // Validate and calculate the total for the restaurant's order
+      let restaurantTotal = 0;
       const validatedItems = items.map((item) => {
-        const price = item.food.price; // Access price directly
+        const price = item.food.price;
         if (
           isNaN(price) ||
           price <= 0 ||
@@ -56,7 +59,7 @@ export const createOrder = async (req, res) => {
           );
           throw new Error("Invalid item price or quantity");
         }
-        total += price * item.quantity;
+        restaurantTotal += price * item.quantity;
         return {
           food: item.food,
           quantity: item.quantity,
@@ -64,11 +67,12 @@ export const createOrder = async (req, res) => {
         };
       });
 
+      // Set the order total using the updated cart total divided by restaurants
       const newOrder = new Order({
         user: user._id,
         restaurant: restaurantId,
         items: validatedItems,
-        total: total,
+        total: updatedCartTotal / Object.keys(itemsByRestaurant).length, // Distribute the discount proportionally
       });
 
       await newOrder.save();
