@@ -12,7 +12,7 @@ router.get('/logout',authRestaurant,logoutRestaurant)
 router.post('/create',upload.single('restaurantImage'),restaurantCreate)
 router.get('/profile/:restaurantId',restaurantProfile)
 router.patch('/update/:restaurantId',authRestaurant,upload.single('restaurantImage'),restaurantUpdate)
-router.delete('/delete/:restaurantId',restaurantDelete)
+router.delete('/delete/:restaurantId',authRestaurant,restaurantDelete)
 
 router.get('/orders',authRestaurant,getRestaurantOrders)
 router.get('/orders/:orderId',authRestaurant,getSingleOrder)
