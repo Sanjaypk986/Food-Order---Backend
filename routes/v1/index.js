@@ -6,10 +6,12 @@ import cartRouter from "./cartRoutes.js";
 import addressRouter from "./addressRoutes.js";
 import orderRouter from "./orderRoutes.js";
 import couponRouter from "./couponRoutes.js";
+import adminRouter from "./adminRoutes.js";
 const v1Router = express.Router();
 
 v1Router.use("/user",userRouter );
 v1Router.use("/restaurant",restaurantRouter );
+v1Router.use("/admin",adminRouter)
 v1Router.use("/food",foodRouter );
 v1Router.use("/address", addressRouter);
 v1Router.use("/cart", cartRouter);
