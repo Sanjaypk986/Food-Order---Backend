@@ -171,3 +171,19 @@ export const userUpdate = async (req, res) => {
       .json({ message: error.message || "Internal server error" });
   }
 };
+
+// check user
+export const checkUser = async (req, res, next) => {
+  try {
+    // get user data from auth middleware
+    const user = req.user;
+    if (!user) {
+      res.status(401).json({ success: false, message: "unauthoraized user" });
+    }
+    res.status(200).json({ success: true, message: "authoraized user" });
+  } catch (error) {
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};

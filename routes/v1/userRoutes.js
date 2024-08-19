@@ -1,5 +1,5 @@
 import express from 'express'
-import { loginUser, logoutUser, userCreate, userProfile, userUpdate } from '../../controllers/userController.js'
+import { checkUser, loginUser, logoutUser, userCreate, userProfile, userUpdate } from '../../controllers/userController.js'
 import { authuser } from '../../middlewares/authUser.js'
 import { upload } from '../../middlewares/uploadMiddleware.js'
 
@@ -11,6 +11,8 @@ router.get('/logout',logoutUser)
 router.get('/profile/:userId',authuser,userProfile)
 router.patch('/update/:userId',upload.single('userImage'),authuser,userUpdate)
 
+// for front-end routing
+router.get('/check-user',authuser,checkUser)
 
 // reset and forgot password want to implement
 

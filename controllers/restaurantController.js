@@ -270,3 +270,16 @@ export const confirmOrder = async(req,res)=> {
     .json({ message: error.message || "Internal server error" });
   }
 }
+
+// check restaurant 
+export const checkRestaurant = async(req,res)=>{
+  try {
+    const restaurant = req.restaurant
+    if (!restaurant) {
+      res.status(404).json({success:false,message:"restaurant not authoraized"})
+    }
+    res.status(200).json({success:true,message:"authoraized restaurant"})
+  } catch (error) {
+    res.status(500).json({message:error.message})
+  }
+}
