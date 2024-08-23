@@ -184,28 +184,6 @@ export const restaurantUpdate = async (req, res) => {
   }
 };
 
-// restaurant delete
-export const restaurantDelete = async (req, res) => {
-  try {
-    // get restaurant id from params
-    const { restaurantId } = req.params;
-    // find restaurant by id
-    const restaurant = await Seller.findByIdAndDelete(restaurantId);
-    if (!restaurant) {
-      return res.status(400).json({ message: "restaurant not found" });
-    }
-    res.status(200).json({
-      success: true,
-      message: "restaurant deleted successfully",
-    });
-  } catch (error) {
-    // send error response
-    res
-      .status(error.status || 500)
-      .json({ message: error.message || "Internal server error" });
-  }
-};
-
 // get orders 
 export const getRestaurantOrders = async(req,res)=> {
   try {

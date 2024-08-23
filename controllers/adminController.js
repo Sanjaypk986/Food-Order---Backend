@@ -1,4 +1,6 @@
 import { Admin } from "../models/adminModel.js";
+import { Order } from "../models/orderModel.js";
+import { Restaurant } from "../models/restaurantModel.js";
 import { User } from "../models/userModel.js";
 
 // create admin
@@ -145,20 +147,102 @@ export const getAllUsers = async (req, res) => {
 
 // delete user
 export const deleteUser = async (req, res) => {
-    try {
-        const { userId } = req.params;
-          // Find and delete the user
+  try {
+    const { userId } = req.params;
+    // Find and delete the user
     const deleteduser = await User.findByIdAndDelete(userId);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
-      res
-        .status(200)
-        .json({ success: true, message: "users deleted successfully", data: deleteduser});
-    } catch (error) {
-      res
-        .status(error.status || 500)
-        .json({ message: error.message || "Internal server error" });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "users deleted successfully",
+        data: deleteduser,
+      });
+  } catch (error) {
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};
+
+// get all restaurants
+export const getAllRestaurants = async (req, res) => {
+  try {
+    const restaurants = await Restaurant.find({});
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "restaurants list fetched",
+        data: restaurants,
+      });
+  } catch (error) {
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};
+
+// restaurant delete
+export const restaurantDelete = async (req, res) => {
+  try {
+    // get restaurant id from params
+    const { restaurantId } = req.params;
+    // find restaurant by id
+    const restaurant = await Order.findByIdAndDelete(restaurantId);
+    if (!restaurant) {
+      return res.status(400).json({ message: "restaurant not found" });
     }
-  };
+    res.status(200).json({
+      success: true,
+      message: "restaurant deleted successfully",
+    });
+  } catch (error) {
+    // send error response
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};
+
+// get all orders
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({});
+    res
+      .status(200)
+      .json({ success: true, message: "orders list fetched", data: orders });
+  } catch (error) {
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};
+
+// order delete
+export const orderDelete = async (req, res) => {
+  try {
+    // get order id from params
+    const { orderId } = req.params;
+    // find order by id
+    const order = await Order.findByIdAndDelete(orderId);
+    if (!order) {
+      return res.status(400).json({ message: "order not found" });
+    }
+    res.status(200).json({
+      success: true,
+      message: "order deleted successfully",
+    });
+  } catch (error) {
+    // send error response
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};
