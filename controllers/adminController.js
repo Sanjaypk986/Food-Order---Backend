@@ -41,7 +41,11 @@ export const adminCreate = async (req, res) => {
     //   authentication using jwt token
     const token = generateToken(email, "admin");
     //   send token as cookie
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     //   send success response
     res.status(200).json({
       success: true,
@@ -85,7 +89,11 @@ export const loginAdmin = async (req, res) => {
     //   authentication using jwt token
     const token = generateToken(email, "admin");
     //   send token as cookie
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     //   send success response
     res
       .status(200)
@@ -157,13 +165,11 @@ export const deleteUser = async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found" });
     }
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "users deleted successfully",
-        data: deleteduser,
-      });
+    res.status(200).json({
+      success: true,
+      message: "users deleted successfully",
+      data: deleteduser,
+    });
   } catch (error) {
     res
       .status(error.status || 500)
@@ -175,13 +181,11 @@ export const deleteUser = async (req, res) => {
 export const getAllRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find({});
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "restaurants list fetched",
-        data: restaurants,
-      });
+    res.status(200).json({
+      success: true,
+      message: "restaurants list fetched",
+      data: restaurants,
+    });
   } catch (error) {
     res
       .status(error.status || 500)

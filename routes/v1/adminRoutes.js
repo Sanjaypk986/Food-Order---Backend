@@ -22,3 +22,5 @@ router.delete('orders/delete/:orderId',authAdmin,orderDelete)
 
 // for front-end routing
 router.get('/check-admin',authAdmin,checkAdmin)
+
+export default router

@@ -1,5 +1,5 @@
 import express from 'express'
-import { checkRestaurant, confirmOrder, getRestaurantOrders, getSingleOrder, loginRestaurant, logoutRestaurant, restaurantCreate, restaurantDelete, restaurantProfile, restaurantUpdate } from '../../controllers/restaurantController.js'
+import { checkRestaurant, confirmOrder, getRestaurantOrders, getSingleOrder, loginRestaurant, logoutRestaurant, restaurantCreate, restaurantProfile, restaurantUpdate } from '../../controllers/restaurantController.js'
 import { upload } from '../../middlewares/uploadMiddleware.js'
 import { authRestaurant } from '../../middlewares/authRestaurant.js'
 

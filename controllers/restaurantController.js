@@ -8,11 +8,11 @@ import { Order } from "../models/orderModel.js";
 
 export const restaurantCreate = async (req, res) => {
   try {
-    
     // destructure values from req.body
-    const { name, description, location, mobile, email, password, orders} = req.body;
+    const { name, description, location, mobile, email, password, orders } =
+      req.body;
     // validation
-    if (!name || !description || !mobile || !location ||!email || !password) {
+    if (!name || !description || !mobile || !location || !email || !password) {
       return res
         .status(400)
         .json({ success: false, message: "All fields required" });
@@ -24,42 +24,47 @@ export const restaurantCreate = async (req, res) => {
         .status(400)
         .json({ success: false, message: "restaurant already exist" });
     }
-      // Upload image using cloudinary
-      const uploadResult = await cloudinaryInstance.uploader
+    // Upload image using cloudinary
+    const uploadResult = await cloudinaryInstance.uploader
       .upload(req.file.path) //add path of file
       .catch((error) => {
-        console.log(error);})
+        console.log(error);
+      });
 
-        // password hasihng 
-        const salt = 10;
-        const hashedPassword = bcrypt.hashSync(password, salt);
+    // password hasihng
+    const salt = 10;
+    const hashedPassword = bcrypt.hashSync(password, salt);
     // create new restaurant
     const newRestaurant = new Restaurant({
       name,
       email,
-      password:hashedPassword,
+      password: hashedPassword,
       location,
       mobile,
       description,
-      orders
+      orders,
     });
 
     // add image if available
     if (uploadResult?.url) {
-      newRestaurant.image = uploadResult.url
+      newRestaurant.image = uploadResult.url;
     }
     // save restaurant
     await newRestaurant.save();
-    
+
     // newRestaurant response
-    const restaurantResponse = await Restaurant.findById(newRestaurant._id).select(
-      "-password"
-    );
-    // token creation 
-        //   authentication using jwt token
-        const token = generateToken(email, "restaurant");
-        //   send token as cookie
-        res.cookie("token", token);
+    const restaurantResponse = await Restaurant.findById(
+      newRestaurant._id
+    ).select("-password");
+    // token creation
+    //   authentication using jwt token
+    const token = generateToken(email, "restaurant");
+    //   send token as cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     res.status(200).json({
       success: true,
       message: "Restaurant created successfully",
@@ -93,7 +98,10 @@ export const loginRestaurant = async (req, res) => {
         .json({ success: false, message: "restaurant does not exist" });
     }
     //  check pasword
-    const passwordMatch = bcrypt.compareSync(password, restaurantExist.password);
+    const passwordMatch = bcrypt.compareSync(
+      password,
+      restaurantExist.password
+    );
     if (!passwordMatch) {
       return res.status(401).json({
         success: false,
@@ -103,7 +111,11 @@ export const loginRestaurant = async (req, res) => {
     //   authentication using jwt token
     const token = generateToken(email, "restaurant");
     //   send token as cookie
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     //   send success response
     res
       .status(200)
@@ -133,19 +145,25 @@ export const logoutRestaurant = async (req, res) => {
   }
 };
 
-// restaurant by id 
+// restaurant by id
 
 export const restaurantProfile = async (req, res) => {
   try {
     // get restaurant id from params
     const { restaurantId } = req.params;
     // find restaurant by id
-    const restaurant = await Restaurant.findById(restaurantId).select("-password -orders -email");
+    const restaurant = await Restaurant.findById(restaurantId).select(
+      "-password -orders -email"
+    );
 
     if (!restaurant) {
       return res.status(400).json({ message: "restaurant not found" });
     }
-    res.status(200).json({ success: true, message: "restaurant profile fetched", data:restaurant});
+    res.status(200).json({
+      success: true,
+      message: "restaurant profile fetched",
+      data: restaurant,
+    });
   } catch (error) {
     // send error response
     res
@@ -163,19 +181,32 @@ export const restaurantUpdate = async (req, res) => {
     // get restaurant id from params
     const { restaurantId } = req.params;
 
-    // create a variable for all data 
+    // create a variable for all data
     const updateRestaurant = {
-      name, description, location,mobile
-    }
+      name,
+      description,
+      location,
+      mobile,
+    };
     // check req.file have image uploads
     if (req.file) {
-      const uploadResult = await cloudinaryInstance.uploader.upload(req.file.path)
-      updateRestaurant.image = uploadResult.url //assign req.file.path url to image
+      const uploadResult = await cloudinaryInstance.uploader.upload(
+        req.file.path
+      );
+      updateRestaurant.image = uploadResult.url; //assign req.file.path url to image
     }
-        // find restaurant by id
-    const updatedRestaurant = await Restaurant.findByIdAndUpdate(restaurantId,updateRestaurant,{new:true})
+    // find restaurant by id
+    const updatedRestaurant = await Restaurant.findByIdAndUpdate(
+      restaurantId,
+      updateRestaurant,
+      { new: true }
+    );
 
-    res.status(200).json({ success: true, message: "restaurant data updated", data:updatedRestaurant});
+    res.status(200).json({
+      success: true,
+      message: "restaurant data updated",
+      data: updatedRestaurant,
+    });
   } catch (error) {
     // send error response
     res
@@ -184,80 +215,92 @@ export const restaurantUpdate = async (req, res) => {
   }
 };
 
-// get orders 
-export const getRestaurantOrders = async(req,res)=> {
+// get orders
+export const getRestaurantOrders = async (req, res) => {
   try {
-    //  get restaurant from authRestaurant 
-    const restaurantInfo = req.restaurant
+    //  get restaurant from authRestaurant
+    const restaurantInfo = req.restaurant;
     // find restaurant
-    const restaurant = await Restaurant.findOne({email:restaurantInfo.email})
+    const restaurant = await Restaurant.findOne({
+      email: restaurantInfo.email,
+    });
     if (!restaurant) {
-      res.status(404).json({message:"restaurant not found"})
+      res.status(404).json({ message: "restaurant not found" });
     }
     // Populate orders with necessary details (food, status, total amount)
-    const orders = await Order.find({ _id: { $in: restaurant.orders } })
-    res.status(200).json({success:true, message:"orders list fetched", orders:orders})
+    const orders = await Order.find({ _id: { $in: restaurant.orders } });
+    res
+      .status(200)
+      .json({ success: true, message: "orders list fetched", orders: orders });
   } catch (error) {
     res
-    .status(error.status || 500)
-    .json({ message: error.message || "Internal server error" });
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
   }
-}
+};
 
-// get order by id 
-export const getSingleOrder = async(req,res)=> {
+// get order by id
+export const getSingleOrder = async (req, res) => {
   try {
     //  get orderId from params
-    const {orderId} = req.params
+    const { orderId } = req.params;
     // find order
-    const singleOrder = await Order.findById(orderId)
+    const singleOrder = await Order.findById(orderId);
     if (!singleOrder) {
-      res.status(404).json({message:"order not found"})
+      res.status(404).json({ message: "order not found" });
     }
-    
-    res.status(200).json({success:true, message:"order details fetched", data:singleOrder})
+
+    res.status(200).json({
+      success: true,
+      message: "order details fetched",
+      data: singleOrder,
+    });
   } catch (error) {
     res
-    .status(error.status || 500)
-    .json({ message: error.message || "Internal server error" });
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
   }
-}
+};
 
 // confirm order
-export const confirmOrder = async(req,res)=> {
+export const confirmOrder = async (req, res) => {
   try {
     //  get orderId from params
-    const {orderId} = req.params
+    const { orderId } = req.params;
     // find order
-    const confirmOrder= await Order.findById(orderId)
+    const confirmOrder = await Order.findById(orderId);
     if (!confirmOrder) {
-      return res.status(404).json({message:"order not found"})
+      return res.status(404).json({ message: "order not found" });
     }
-    if (confirmOrder.status ==='Confirmed') {
-      return res.status(400).json({message:"already order confirmed"})
+    if (confirmOrder.status === "Confirmed") {
+      return res.status(400).json({ message: "already order confirmed" });
     }
-    if (confirmOrder.status ==='Pending') {
-      confirmOrder.status = "Confirmed"
-       await confirmOrder.save()
+    if (confirmOrder.status === "Pending") {
+      confirmOrder.status = "Confirmed";
+      await confirmOrder.save();
     }
-   
-    res.status(200).json({success:true, message:"order confirmed", data:confirmOrder})
+
+    res
+      .status(200)
+      .json({ success: true, message: "order confirmed", data: confirmOrder });
   } catch (error) {
     res
-    .status(error.status || 500)
-    .json({ message: error.message || "Internal server error" });
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
   }
-}
+};
 
-// check restaurant 
-export const checkRestaurant = async(req,res)=>{
+// check restaurant
+export const checkRestaurant = async (req, res) => {
   try {
-    const restaurant = req.restaurant
+    const restaurant = req.restaurant;
     if (!restaurant) {
-      res.status(404).json({success:false,message:"restaurant not authoraized"})
+      res
+        .status(404)
+        .json({ success: false, message: "restaurant not authoraized" });
     }
-    res.status(200).json({success:true,message:"authoraized restaurant"})
+    res.status(200).json({ success: true, message: "authoraized restaurant" });
   } catch (error) {
-    res.status(500).json({message:error.message})
+    res.status(500).json({ message: error.message });
   }
-}
+};

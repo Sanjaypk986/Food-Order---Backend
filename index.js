@@ -10,7 +10,12 @@ const port = 4500
 // acces req.body
 app.use(express.json())
 // cors 
-app.use(cors())
+app.use(cors(
+  {
+    origin:true,
+    credentials:true
+  }
+))
 // to get req.cookies
 app.use(cookieParser())
 // mongodb connection

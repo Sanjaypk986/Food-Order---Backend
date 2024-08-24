@@ -1,5 +1,6 @@
 import { User } from "../models/userModel.js";
 import bcrypt from "bcrypt";
+import nodemailer from "nodemailer";
 import { generateToken } from "../utils/generateToken.js";
 import { cloudinaryInstance } from "../config/cloudinaryConfig.js";
 
@@ -7,11 +8,10 @@ import { cloudinaryInstance } from "../config/cloudinaryConfig.js";
 const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
-  user: process.env.EMAIL_USER,
-  pass: process.env.APP_PASSWORD,
+    user: process.env.EMAIL_USER,
+    pass: process.env.APP_PASSWORD,
   },
-  });
-
+});
 
 // create user
 export const userCreate = async (req, res) => {
@@ -59,7 +59,11 @@ export const userCreate = async (req, res) => {
     //   authentication using jwt token
     const token = generateToken(email, "user");
     //   send token as cookie
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     //   send success response
     res.status(200).json({
       success: true,
@@ -103,7 +107,11 @@ export const loginUser = async (req, res) => {
     //   authentication using jwt token
     const token = generateToken(email, "user");
     //   send token as cookie
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     //   send success response
     res.status(200).json({ success: true, message: "User login successfully" });
   } catch (error) {
@@ -287,24 +295,23 @@ export const resetRequest = async (req, res) => {
 // reset password
 export const resetPassword = async (req, res) => {
   // destructure token and newpassword
-  const {token , newPassword} = req.body
-  try{
-  // verify jwt token 
-  const decoded = jwt.verify(token,process.env.JWT_RESET_KEY)
-  // find user with user.id from jwt verify
-  const user = await User.findById(decoded.userId);
-  // check user available
-  if (!user) {
-    return res.status(404).send("User not found")
-  }
-  // change user password using new password
-  user.password = await bcrypt.hash(newPassword,10)
-  // save user
-  await user.save()
-  res.send("Password reset successful");
+  const { token, newPassword } = req.body;
+  try {
+    // verify jwt token
+    const decoded = jwt.verify(token, process.env.JWT_RESET_KEY);
+    // find user with user.id from jwt verify
+    const user = await User.findById(decoded.userId);
+    // check user available
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    // change user password using new password
+    user.password = await bcrypt.hash(newPassword, 10);
+    // save user
+    await user.save();
+    res.send("Password reset successful");
   } catch (error) {
     console.error("Error resetting password:", error);
     res.status(500).send("Internal Server Error");
   }
-
 };
