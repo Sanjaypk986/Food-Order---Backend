@@ -32,11 +32,15 @@ export const userCreate = async (req, res) => {
         .json({ success: false, message: "user already exist" });
     }
     // Upload an image cloudinary
-    const uploadResult = await cloudinaryInstance.uploader
-      .upload(req.file.path)
-      .catch((error) => {
-        console.log(error);
-      });
+    let uploadResult;
+    // Upload an image to Cloudinary if a file is provided
+    if (req.file) {
+      uploadResult = await cloudinaryInstance.uploader.upload(req.file.path)
+        .catch((error) => {
+          console.error("Cloudinary upload error:", error);
+          return res.status(500).json({ message: "Error uploading image" });
+        });
+    }
     // password hashing
     const salt = 10;
     const hashedPassword = bcrypt.hashSync(password, salt);
