@@ -2,6 +2,8 @@ import { Admin } from "../models/adminModel.js";
 import { Order } from "../models/orderModel.js";
 import { Restaurant } from "../models/restaurantModel.js";
 import { User } from "../models/userModel.js";
+import bcrypt from "bcrypt";
+import { generateToken } from "../utils/generateToken.js";
 
 // create admin
 export const adminCreate = async (req, res) => {
@@ -125,7 +127,7 @@ export const logoutAdmin = async (req, res) => {
 // check admin
 export const checkAdmin = async (req, res) => {
   try {
-    const admin = user.admin;
+    const admin = req.admin;
     if (!admin) {
       return res
         .status(404)

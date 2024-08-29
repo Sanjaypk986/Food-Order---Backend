@@ -74,6 +74,8 @@ export const userCreate = async (req, res) => {
       message: "User created successfully",
       data: userResponse,
     });
+    console.log(userResponse);
+    
   } catch (error) {
     // send error response
     res
