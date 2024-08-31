@@ -106,7 +106,11 @@ export const getFoodById = async (req, res) => {
 export const getAllFoods = async (req, res) => {
   try {
     // find foods
-    const getFoodList = await Food.find({});
+    const getFoodList = await Food.find({})
+    .populate({
+      path: 'restaurant',
+      select: '-password -email -orders'  // Exclude these fields
+    });
     res
       .status(200)
       .json({ success: true, message: "food list fetched", data: getFoodList });
@@ -145,44 +149,29 @@ export const deleteFood = async (req, res) => {
 export const searchFoods = async (req, res) => {
   try {
     // Extract search parameters from the query string
-    const { name, category, minPrice, maxPrice } = req.query;
+    const { search, category, sort } = req.query;
 
     // Build the query object based on provided search parameters
     const query = {};
 
-    // Handle name query (case-insensitive search)
-    if (name) {
-      query.name = new RegExp(name, "i"); // Case-insensitive search
+    // Handle search query (case-insensitive search)
+    if (search) {
+      query.name = new RegExp(search, "i");
     }
 
     // Handle category query
     if (category) {
-      if (Array.isArray(category)) {
-        // If category is an array, use it directly
-        query.category = {
-          $in: category.map((cat) => new RegExp(`^${cat}$`, "i")),
-        };
-      } else {
-        // If category is a string, wrap it in an array
-        query.category = {
-          $in: [new RegExp(`^${category}$`, "i")],
-        };
-      }
+      query.category = new RegExp(`^${category}$`, "i");
     }
 
-    // Handle price range query
-    if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) {
-        query.price.$gte = Number(minPrice);
-      }
-      if (maxPrice) {
-        query.price.$lte = Number(maxPrice);
-      }
+    // Determine sort options
+    let sortOptions = {};
+    if (sort) {
+      sortOptions = { price: sort === 'asc' ? 1 : -1 };
     }
 
-    // Fetch matching food items from the database
-    const foods = await Food.find(query);
+    // Fetch matching food items from the database with sorting
+    const foods = await Food.find(query).sort(sortOptions);
 
     // Respond with the results
     res.status(200).json({ success: true, foods });
@@ -192,4 +181,6 @@ export const searchFoods = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
 
