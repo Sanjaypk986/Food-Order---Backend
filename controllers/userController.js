@@ -154,15 +154,12 @@ export const logoutUser = async (req, res) => {
 // user profile
 export const userProfile = async (req, res) => {
   try {
-    // get user id from params
-    const { userId } = req.params;
-    // find user by id
-    const user = await User.findById(userId)
-      .select("-password")
-      .populate("address"); // select is used to avoid password as response
+    const user = req.user; // Already fetched by authUser middleware
+
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
+
     res
       .status(200)
       .json({ success: true, message: "User profile fetched", data: user });

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
+import { User } from "../models/userModel.js";
 
-export const authuser = (req, res, next) => {
+export const authuser = async (req, res, next) => {
   try {
     // destructure token from cookies
     const { token } = req.cookies;
@@ -17,13 +18,24 @@ export const authuser = (req, res, next) => {
         .status(401)
         .json({ succuss: false, message: "unauthoraized user" });
     }
-    // to get user data from jwt
-    req.user = verifiedToken;
-    // next middleware function
+
+    // Fetch user from the database using the id from the token
+    const user = await User.findOne({ email: verifiedToken.email })
+      .select("-password")
+      .populate("address");
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Attach user to the request object
+    req.user = user;
     next();
   } catch (error) {
     res
-    .status(error.status || 500)
-    .json({ message: error.message || "interal server error" });
+      .status(error.status || 500)
+      .json({ message: error.message || "interal server error" });
   }
 };
