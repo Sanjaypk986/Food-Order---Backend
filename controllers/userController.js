@@ -35,7 +35,8 @@ export const userCreate = async (req, res) => {
     let uploadResult;
     // Upload an image to Cloudinary if a file is provided
     if (req.file) {
-      uploadResult = await cloudinaryInstance.uploader.upload(req.file.path)
+      uploadResult = await cloudinaryInstance.uploader
+        .upload(req.file.path)
         .catch((error) => {
           console.error("Cloudinary upload error:", error);
           return res.status(500).json({ message: "Error uploading image" });
@@ -74,8 +75,6 @@ export const userCreate = async (req, res) => {
       message: "User created successfully",
       data: userResponse,
     });
-    console.log(userResponse);
-    
   } catch (error) {
     // send error response
     res
@@ -119,7 +118,15 @@ export const loginUser = async (req, res) => {
       sameSite: "none",
     });
     //   send success response
-    res.status(200).json({ success: true, message: "User login successfully" });
+    res.status(200).json({
+      success: true,
+      message: "User login successfully",
+      data: {
+        ...userExist._doc, // Spread to ensure data is included
+        // hide password from response
+        password: undefined,
+      },
+    });
   } catch (error) {
     // send error response
     res

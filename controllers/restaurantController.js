@@ -145,6 +145,22 @@ export const logoutRestaurant = async (req, res) => {
   }
 };
 
+// get all restaurants
+export const getAllRestaurants = async (req, res) => {
+  try {
+    const restaurants = await Restaurant.find({});
+    res.status(200).json({
+      success: true,
+      message: "restaurants list fetched",
+      data: restaurants,
+    });
+  } catch (error) {
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};
+
 // restaurant by id
 
 export const restaurantProfile = async (req, res) => {
