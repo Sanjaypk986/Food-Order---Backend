@@ -23,15 +23,11 @@ export const addItem = async (req, res) => {
         .json({ success: false, message: "Invalid quantity" });
     }
 
-    // Get user information from auth middleware
-    const userInfo = req.user;
 
-    // Find user by email
-    const user = await User.findOne({ email: userInfo.email });
+    const user = req.user; // Already fetched by authUser middleware
+
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(400).json({ message: "User not found" });
     }
 
     // Find the food item by ID and populate its restaurant details
@@ -78,7 +74,7 @@ export const addItem = async (req, res) => {
     await cart.save();
 
     // Send the updated cart as a response
-    res.status(200).json({ success: true, cart });
+    res.status(200).json({ success: true,message:'Item added successfully', cart });
   } catch (error) {
     // Handle any errors that occur during the process
     res.status(500).json({ success: false, message: error.message });
@@ -98,10 +94,7 @@ export const removeItemFromCart = async (req, res) => {
         .json({ success: false, message: "Invalid food ID" });
     }
     // Get user information from auth middleware
-    const userInfo = req.user;
-
-    // Find user by email
-    const user = await User.findOne({ email: userInfo.email });
+    const user = req.user;
     if (!user) {
       return res
         .status(404)
@@ -156,7 +149,7 @@ export const removeItemFromCart = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, message: "Removed item successfully", cart });
+      .json({ success: true, message: "Removed item successfully", data:cart });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -167,7 +160,8 @@ export const updateItemQuantity = async (req, res) => {
   try {
     // Destructure data from request body
     const { foodId, quantity } = req.body;
-
+    console.log(quantity);
+    
     // Validate foodId
     if (!mongoose.Types.ObjectId.isValid(foodId)) {
       return res
@@ -182,10 +176,8 @@ export const updateItemQuantity = async (req, res) => {
     }
 
     // Get user information from auth middleware
-    const userInfo = req.user;
-
-    // Find user by email
-    const user = await User.findOne({ email: userInfo.email });
+    const user = req.user;
+    
     if (!user) {
       return res
         .status(404)
@@ -244,7 +236,7 @@ export const updateItemQuantity = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Item quantity updated successfully",
-      cart,
+      data:cart,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -292,7 +284,7 @@ export const getCartDetails = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Cart details fetched",
-      cart,
+      data:cart,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
