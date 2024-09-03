@@ -139,12 +139,10 @@ export const logoutUser = async (req, res) => {
   try {
     // Clear the token by setting it to an empty string and expiring immediately
     res.cookie("token", "", {
-      expires: new Date(0), // Expire the cookie immediately
+      expires: new Date(0),
       httpOnly: true,
-      secure: true, // Ensure it's secure for production
-      sameSite: "none", // Allows for cross-site requests
-      domain: 'food-order-backend-theta.vercel.app', // Explicitly set the domain
-      path: '/', // Explicitly set the path to root
+      secure: true, 
+      sameSite: "none", 
     });
 
     console.log('user logout');
