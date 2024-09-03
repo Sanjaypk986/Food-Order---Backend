@@ -12,7 +12,11 @@ app.use(express.json())
 // cors 
 app.use(cors(
   {
-    origin:true,
+    origin: [
+      'https://spicezy-food-order.vercel.app',
+      'http://localhost:5173',
+      'https://66d5fb33d946f9000881bc64--spicezy-food-delivery.netlify.app'
+    ],
     credentials:true
   }
 ))
