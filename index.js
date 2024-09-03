@@ -15,7 +15,7 @@ app.use(cors(
     origin: [
       'https://spicezy-food-order.vercel.app',
       'http://localhost:5173',
-      'https://66d5fb33d946f9000881bc64--spicezy-food-delivery.netlify.app'
+      'https://master--spicezy-food-delivery.netlify.app/'
     ],
     credentials:true
   }
