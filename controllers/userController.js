@@ -86,75 +86,89 @@ export const userCreate = async (req, res) => {
 // login user
 export const loginUser = async (req, res) => {
   try {
-    // destructure values from req.body
     const { email, password } = req.body;
-    // validation
+    console.log("Login attempt:", { email }); // Log login attempt
+
+    // Validation
     if (!email || !password) {
+      console.log("Validation failed: Missing email or password");
       return res
         .status(400)
         .json({ success: false, message: "All fields required" });
     }
-    // check user available
+
+    // Check user availability
     const userExist = await User.findOne({ email });
     if (!userExist) {
+      console.log("User does not exist");
       return res
         .status(401)
-        .json({ success: false, message: "user does not exist" });
+        .json({ success: false, message: "User does not exist" });
     }
-    //  check pasword
+
+    // Check password
     const passwordMatch = bcrypt.compareSync(password, userExist.password);
     if (!passwordMatch) {
+      console.log("Unauthorized user or invalid password");
       return res.status(401).json({
         success: false,
-        message: "unauthoraized user or invalid password",
+        message: "Unauthorized user or invalid password",
       });
     }
-    //   authentication using jwt token
+
+    // Generate JWT token
     const token = generateToken(email, "user");
-    //   send token as cookie
+    console.log("Generated token:", token); // Log generated token
+
+    // Send token as cookie
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
     });
-    //   send success response
+    console.log("Cookie set with token"); // Log cookie setting
+
+    // Send success response
     res.status(200).json({
       success: true,
       message: "User login successfully",
       data: {
-        ...userExist._doc, // Spread to ensure data is included
-        // hide password from response
-        password: undefined,
+        ...userExist._doc,
+        password: undefined, // Hide password from response
       },
     });
   } catch (error) {
-    // send error response
-    res
-      .status(error.status || 500)
-      .json({ message: error.message || "Internal server error" });
+    console.error("Error during login:", error); // Log error
+    res.status(error.status || 500).json({
+      message: error.message || "Internal server error",
+    });
   }
 };
 
 export const logoutUser = async (req, res) => {
   try {
-    // Debug: Log request and response
-    console.log("Logout request received");
+    console.log("Logout request received"); // Log request
 
+    // Clear cookie
     res.cookie("token", "", {
       expires: new Date(0),
       httpOnly: true,
       secure: true,
       sameSite: "none",
     });
+    console.log("Logout cookie cleared"); // Log cookie cleared
 
-    console.log("Logout cookie cleared");
-    
-    res.status(200).json({ success: true, message: "User logout successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "User logout successfully" });
   } catch (error) {
-    console.error('Error clearing cookie:', error);
-    res.status(error.status || 500).json({ message: error.message || "Internal server error" });
+    console.error("Error clearing cookie:", error); // Log error
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
   }
 };
+
 
 
 // user profile
