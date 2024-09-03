@@ -135,25 +135,29 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// logout user
 export const logoutUser = async (req, res) => {
   try {
-    // clear token in cookie
-    res.clearCookie("token", {
+    // Clear token 
+    res.cookie("token", "", {
+      expires: new Date(0), // Expire the cookie 
       httpOnly: true,
       secure: true, 
-      sameSite: "none",
+      sameSite: "none", 
     });
+
+    console.log('user logout');
+
     res
       .status(200)
       .json({ success: true, message: "User logout successfully" });
   } catch (error) {
-    // send error response
+    // Send error response
     res
       .status(error.status || 500)
       .json({ message: error.message || "Internal server error" });
   }
 };
+
 
 // user profile
 export const userProfile = async (req, res) => {
