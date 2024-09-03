@@ -7,7 +7,7 @@ const router = express.Router()
 
 router.post('/create',upload.single('userImage'),userCreate)
 router.post('/login',loginUser)
-router.get('/logout',logoutUser)
+router.get('/logout',authuser,logoutUser)
 router.get('/profile',authuser,userProfile)
 router.patch('/update/:userId',upload.single('userImage'),authuser,userUpdate)
 router.post('/reset-request',resetRequest)

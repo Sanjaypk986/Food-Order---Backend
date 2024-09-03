@@ -137,28 +137,26 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
   try {
-    // Clear token by setting it to an empty string and expiring immediately
+    // Clear the token by setting it to an empty string and expiring immediately
     res.cookie("token", "", {
       expires: new Date(0), // Expire the cookie immediately
       httpOnly: true,
-      secure: true, // Ensure it's secure, especially for production
-      sameSite: "none", // Necessary for cross-site requests
+      secure: true, // Ensure it's secure for production
+      sameSite: "none", // Allows for cross-site requests
       domain: 'food-order-backend-theta.vercel.app', // Explicitly set the domain
       path: '/', // Explicitly set the path to root
     });
 
     console.log('user logout');
 
-    res
-      .status(200)
-      .json({ success: true, message: "User logout successfully" });
+    res.status(200).json({ success: true, message: "User logout successfully" });
   } catch (error) {
-    // Send error response
-    res
-      .status(error.status || 500)
-      .json({ message: error.message || "Internal server error" });
+    console.error('Error clearing cookie:', error);
+    res.status(error.status || 500).json({ message: error.message || "Internal server error" });
   }
 };
+
+
 
 
 // user profile
