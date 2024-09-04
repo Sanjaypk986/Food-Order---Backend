@@ -108,7 +108,12 @@ export const getOrderById = async (req, res) => {
     const { orderId } = req.params;
 
     // find order
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).populate({
+      path: "restaurant",
+      select: "-password -orders -email", // Exclude fields like password, orders, and email
+    }).populate({
+      path: "food",
+    });;
     if (!order) {
       res.status(404).json({ success: false, message: "Order not found" });
     }
@@ -166,6 +171,8 @@ export const myOrders = async (req, res) => {
     const orders = await Order.find({ user: user._id }).populate({
       path: "restaurant",
       select: "-password -orders -email", // Exclude fields like password, orders, and email
+    }).populate({
+      path: "food",
     });
     if (!orders || orders.length === 0) {
       return res
