@@ -6,8 +6,7 @@ import { User } from "../models/userModel.js";
 // create order
 export const createOrder = async (req, res) => {
   try {
-    const userInfo = req.user;
-    const user = await User.findOne({ email: userInfo.email });
+    const user = req.user;
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
@@ -172,7 +171,7 @@ export const myOrders = async (req, res) => {
       path: "restaurant",
       select: "-password -orders -email", // Exclude fields like password, orders, and email
     }).populate({
-      path: "food",
+      path: 'items.food', // Populate the food inside items
     });
     if (!orders || orders.length === 0) {
       return res
