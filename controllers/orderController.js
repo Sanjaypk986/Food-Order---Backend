@@ -154,10 +154,8 @@ export const cancelOrder = async (req, res) => {
 export const myOrders = async (req, res) => {
   try {
     // get from auth user
-    const userInfo = req.user;
+    const user = req.user;
 
-    // find user
-    const user = await User.findOne({ email: userInfo.email });
     if (!user) {
       return res
         .status(404)
@@ -165,19 +163,20 @@ export const myOrders = async (req, res) => {
     }
 
     // find orders by user ID
-    const orders = await Order.find({ user: user._id });
+    const orders = await Order.find({ user: user._id }).populate({
+      path: "restaurant",
+      select: "-password -orders -email", // Exclude fields like password, orders, and email
+    });
     if (!orders || orders.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "No orders found" });
     }
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "my order fetched  successfully",
-        data: orders,
-      });
+    res.status(200).json({
+      success: true,
+      message: "my order fetched  successfully",
+      data: orders,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

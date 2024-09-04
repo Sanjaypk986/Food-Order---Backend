@@ -87,7 +87,6 @@ export const userCreate = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Login attempt:", { email }); // Log login attempt
 
     // Validation
     if (!email || !password) {
@@ -100,7 +99,6 @@ export const loginUser = async (req, res) => {
     // Check user availability
     const userExist = await User.findOne({ email });
     if (!userExist) {
-      console.log("User does not exist");
       return res
         .status(401)
         .json({ success: false, message: "User does not exist" });
@@ -118,15 +116,12 @@ export const loginUser = async (req, res) => {
 
     // Generate JWT token
     const token = generateToken(email, "user");
-    console.log("Generated token:", token); // Log generated token
-
     // Send token as cookie
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
     });
-    console.log("Cookie set with token"); // Log cookie setting
 
     // Send success response
     res.status(200).json({
@@ -147,8 +142,6 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
   try {
-    console.log("Logout request received"); // Log request
-
     // Clear cookie
     res.cookie("token", "", {
       expires: new Date(0),
@@ -156,8 +149,6 @@ export const logoutUser = async (req, res) => {
       secure: true,
       sameSite: "none",
     });
-    console.log("Logout cookie cleared"); // Log cookie cleared
-
     res
       .status(200)
       .json({ success: true, message: "User logout successfully" });
