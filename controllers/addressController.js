@@ -7,6 +7,7 @@ export const addressCreate = async (req, res) => {
   try {
     // destructure values from req.body
     const { firstname, lastname, city, street, mobile, pincode } = req.body;
+    
     // validation
     if (!firstname || !street || !city || !mobile || !pincode) {
       return res
@@ -14,12 +15,7 @@ export const addressCreate = async (req, res) => {
         .json({ success: false, message: "All fields required" });
     }
     // Get user info from auth middleware
-    const userInfo = req.user;
-
-    // Find the user and check if they already have an address
-    const user = await User.findOne({ email: userInfo.email }).populate(
-      "address"
-    );
+    const user = req.user;
     if (!user) {
       return res
         .status(401)
@@ -68,12 +64,9 @@ export const addressUpdate = async (req, res) => {
   try {
     // destructure values from req.body
     const { firstname, lastname, city, street, mobile, pincode } = req.body;
+    
     // get user  from authuser
-    const userInfo = req.user;
-    // find user
-    const user = await User.findOne({ email: userInfo.email }).populate(
-      "address"
-    );
+    const user = req.user;
     if (!user) {
       return res
         .status(401)

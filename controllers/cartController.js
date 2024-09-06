@@ -58,7 +58,9 @@ export const addItem = async (req, res) => {
       // Add the food item and quantity to the cart
       cart.items.push({ food: food, quantity });
     }
-
+    if (cart.couponApplied) {
+      cart.couponApplied = false;
+    }
     // Calculate total amount
     let totalAmount = 0;
     for (const item of cart.items) {
@@ -84,76 +86,62 @@ export const addItem = async (req, res) => {
 // remove an item from the cart
 export const removeItemFromCart = async (req, res) => {
   try {
-    // Destructure data from request body
     const { foodId } = req.body;
-
-    // Validate foodId
-    if (!mongoose.Types.ObjectId.isValid(foodId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid food ID" });
-    }
-    // Get user information from auth middleware
     const user = req.user;
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+
+    if (!mongoose.Types.ObjectId.isValid(foodId)) {
+      return res.status(400).json({ success: false, message: "Invalid food ID" });
     }
 
-    // Find the food item
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
     const food = await Food.findById(foodId);
     if (!food) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Food item not found" });
+      return res.status(404).json({ success: false, message: "Food item not found" });
     }
-    // Find the cart for the user
-    let cart = await Cart.findOne({ user: user._id }); // Use user._id
-    if (!cart) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Cart not found" });
-    }
-    // Check if the food item exists in the cart
-    const itemIndex = cart.items.findIndex(
-      (item) => item.food.toString() === foodId
-    );
-    if (itemIndex === -1) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Item not found in cart" });
-    }
-    // Remove the item from the cart
-    cart.items.splice(itemIndex, 1);
-    // Calculate the total price of the cart
-    const itemIds = cart.items.map((item) => item.food); // Get all foodIds in cart
-    const foodItems = await Food.find({ _id: { $in: itemIds } }); // Get price list of all food items
 
-    // Create a map of food prices
+    let cart = await Cart.findOne({ user: user._id });
+    if (!cart) {
+      return res.status(404).json({ success: false, message: "Cart not found" });
+    }
+
+    const itemIndex = cart.items.findIndex(item => item.food.toString() === foodId);
+    if (itemIndex === -1) {
+      return res.status(404).json({ success: false, message: "Item not found in cart" });
+    }
+
+    cart.items.splice(itemIndex, 1);
+
+    // Recalculate total
+    const itemIds = cart.items.map(item => item.food);
+    const foodItems = await Food.find({ _id: { $in: itemIds } });
     const priceMap = foodItems.reduce((map, item) => {
       map[item._id.toString()] = item.price;
       return map;
     }, {});
 
-    // Calculate the total price
     let totalPrice = 0;
-    cart.items.forEach((item) => {
+    cart.items.forEach(item => {
       const price = priceMap[item.food.toString()];
       totalPrice += item.quantity * (price || 0);
     });
 
-    // Save the updated cart
+    // Reset coupon if no items left
+    if (cart.items.length === 0) {
+      cart.couponApplied = false;
+    }
+
     cart.total = totalPrice;
     await cart.save();
 
-    res
-      .status(200)
-      .json({ success: true, message: "Removed item successfully", data:cart });
+    res.status(200).json({ success: true, message: "Removed item successfully", data: cart });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 //   update the quantity of an item in the cart
 export const updateItemQuantity = async (req, res) => {
@@ -247,10 +235,9 @@ export const updateItemQuantity = async (req, res) => {
 export const getCartDetails = async (req, res) => {
   try {
     // Get user information from auth middleware
-    const userInfo = req.user;
+    const user = req.user;
 
     // Find user by email
-    const user = await User.findOne({ email: userInfo.email });
     if (!user) {
       return res
         .status(404)
@@ -272,21 +259,18 @@ export const getCartDetails = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Cart not found" });
     }
-    // Calculate total amount
-    let totalAmount = 0;
-    cart.items.forEach((item) => {
-      totalAmount += item.food.price * item.quantity;
-    });
 
-    cart.total = totalAmount;
+    // If the cart already has a discounted total, return it without recalculating
+    let totalAmount = cart.total;
 
     // Return cart details
     res.status(200).json({
       success: true,
       message: "Cart details fetched",
-      data:cart,
+      data: cart,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+

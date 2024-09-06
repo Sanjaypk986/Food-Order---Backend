@@ -26,5 +26,6 @@ const cartSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  couponApplied: { type: Boolean, default: false }
 });
 export const Cart = mongoose.model("Cart", cartSchema);
