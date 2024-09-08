@@ -14,7 +14,8 @@ export const checkoutPayment = async (req, res) => {
           name: item.food.name,
           images: [item.food.image],
         },
-        unit_amount: Math.round(item.food.price * 100), // Stripe expects amount in paisa
+        unit_amount: Math.round(item.food.price * 100),
+         // Stripe expects amount in paisa
       },
       quantity: item.quantity,
     }));
@@ -22,13 +23,14 @@ export const checkoutPayment = async (req, res) => {
     // Create the checkout session with the provided total amount
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: lineItems,
+      line_items: lineItems,  
       mode: "payment",
       success_url: `${process.env.CLIENT_DOMAIN}/user/payment/success`,
       cancel_url: `${process.env.CLIENT_DOMAIN}/user/payment/cancel`,
       line_items: lineItems, // Use the total sent from the frontend (don't recalculate)
     });
-
+    console.log(process.env.Stripe_Private_Key);
+    
     console.log("sesstionId ====" ,session.id);
     
     res.json({ success: true, sessionId: session.id });
