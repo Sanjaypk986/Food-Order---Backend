@@ -160,8 +160,6 @@ export const logoutUser = async (req, res) => {
   }
 };
 
-
-
 // user profile
 export const userProfile = async (req, res) => {
   try {
@@ -253,7 +251,7 @@ export const resetRequest = async (req, res) => {
       expiresIn: "5m",
     });
     // nodemailer configure
-    const resetUrl = `${process.env.FRONT_END_URL}/reset-password?token=${token}`;
+    const resetUrl = `${process.env.CLIENT_DOMAIN}/reset-password?token=${token}`;
     const mailOptions = {
       to: user.email,
       from: process.env.EMAIL_USER,
