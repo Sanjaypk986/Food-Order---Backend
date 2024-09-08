@@ -29,7 +29,6 @@ export const checkoutPayment = async (req, res) => {
       cancel_url: `${process.env.CLIENT_DOMAIN}/user/payment/cancel`,
       line_items: lineItems, // Use the total sent from the frontend (don't recalculate)
     });
-    console.log(process.env.Stripe_Private_Key);
     
     console.log("sesstionId ====" ,session.id);
     

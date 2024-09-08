@@ -1,7 +1,12 @@
 import { Cart } from "../models/cartModel.js";
 import { Order } from "../models/orderModel.js";
 import { Restaurant } from "../models/restaurantModel.js";
-import { User } from "../models/userModel.js";
+import twilio from "twilio";
+
+// twillio
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = twilio(accountSid, authToken);
 
 // create order
 export const createOrder = async (req, res) => {
@@ -85,11 +90,15 @@ export const createOrder = async (req, res) => {
       user.orders.push(newOrder._id);
       orders.push(newOrder);
     }
-
     // Clear the cart
     await Cart.deleteOne({ _id: cart._id });
     await user.save();
-
+    // // Send order confirmation SMS
+    const message = await client.messages.create({
+      body: `Your order with ID ${orders[0]._id} has been successfully placed.`,
+      from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
+      to: user.mobile,
+    });
     res.status(200).json({
       success: true,
       message: "Orders created successfully",
@@ -107,12 +116,14 @@ export const getOrderById = async (req, res) => {
     const { orderId } = req.params;
 
     // find order
-    const order = await Order.findById(orderId).populate({
-      path: "restaurant",
-      select: "-password -orders -email", // Exclude fields like password, orders, and email
-    }).populate({
-      path: "food",
-    });;
+    const order = await Order.findById(orderId)
+      .populate({
+        path: "restaurant",
+        select: "-password -orders -email", // Exclude fields like password, orders, and email
+      })
+      .populate({
+        path: "food",
+      });
     if (!order) {
       res.status(404).json({ success: false, message: "Order not found" });
     }
@@ -167,12 +178,14 @@ export const myOrders = async (req, res) => {
     }
 
     // find orders by user ID
-    const orders = await Order.find({ user: user._id }).populate({
-      path: "restaurant",
-      select: "-password -orders -email", // Exclude fields like password, orders, and email
-    }).populate({
-      path: 'items.food', // Populate the food inside items
-    });
+    const orders = await Order.find({ user: user._id })
+      .populate({
+        path: "restaurant",
+        select: "-password -orders -email", // Exclude fields like password, orders, and email
+      })
+      .populate({
+        path: "items.food", // Populate the food inside items
+      });
     if (!orders || orders.length === 0) {
       return res
         .status(404)
