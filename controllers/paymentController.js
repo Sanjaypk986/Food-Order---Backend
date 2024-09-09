@@ -7,18 +7,18 @@ export const checkoutPayment = async (req, res) => {
     const { cartItems, cartTotal } = req.body;
 
     // Create line items for Stripe
-    const lineItems = cartItems.map((item) => ({
-      price_data: {
-        currency: "inr",
-        product_data: {
-          name: item.food.name,
-          images: [item.food.image],
+    const lineItems = [
+        {
+          price_data: {
+            currency: "inr",
+            product_data: {
+              name: "Total Cart Amount", // General name for the entire cart
+            },
+            unit_amount: Math.round(cartTotal * 100), // Stripe expects amount in paisa
+          },
+          quantity: 1, // Since it's a single line item for the total amount
         },
-        unit_amount: Math.round(item.food.price * 100),
-         // Stripe expects amount in paisa
-      },
-      quantity: item.quantity,
-    }));
+      ];
 
     // Create the checkout session with the provided total amount
     const session = await stripe.checkout.sessions.create({
