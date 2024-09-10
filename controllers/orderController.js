@@ -23,9 +23,7 @@ export const createOrder = async (req, res) => {
     });
 
     if (!cart) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Cart not found" });
+      return res.status(404).json({ success: false, message: "Cart not found" });
     }
 
     // Assume the cart total has been updated with any applied discount
@@ -41,26 +39,20 @@ export const createOrder = async (req, res) => {
       return acc;
     }, {});
 
-    // Calculate the discounted total for each restaurant
+    // Calculate the total and create orders for each restaurant
     const orders = [];
+    let totalCartValue = 0;
+
     for (const restaurantId in itemsByRestaurant) {
       const items = itemsByRestaurant[restaurantId];
 
       if (items.length === 0) continue; // Skip empty item lists
 
-      // Validate and calculate the total for the restaurant's order
+      // Calculate the total for the restaurant's order
       let restaurantTotal = 0;
       const validatedItems = items.map((item) => {
         const price = item.food.price;
-        if (
-          isNaN(price) ||
-          price <= 0 ||
-          isNaN(item.quantity) ||
-          item.quantity <= 0
-        ) {
-          console.error(
-            `Invalid item - Price: ${price}, Quantity: ${item.quantity}`
-          );
+        if (isNaN(price) || price <= 0 || isNaN(item.quantity) || item.quantity <= 0) {
           throw new Error("Invalid item price or quantity");
         }
         restaurantTotal += price * item.quantity;
@@ -71,12 +63,17 @@ export const createOrder = async (req, res) => {
         };
       });
 
-      // Set the order total using the updated cart total divided by restaurants
+      // Adjust the total based on any applied discounts
+      // You can calculate the proportion of the discount for each restaurant
+      const restaurantDiscount = (restaurantTotal / cart.total) * (cart.total - updatedCartTotal);
+
+      const finalRestaurantTotal = restaurantTotal - restaurantDiscount;
+
       const newOrder = new Order({
         user: user._id,
         restaurant: restaurantId,
         items: validatedItems,
-        total: updatedCartTotal / Object.keys(itemsByRestaurant).length, // Distribute the discount proportionally
+        total: finalRestaurantTotal, // Total for this restaurant after discount
       });
 
       await newOrder.save();
@@ -89,17 +86,22 @@ export const createOrder = async (req, res) => {
 
       user.orders.push(newOrder._id);
       orders.push(newOrder);
+
+      // Add to the overall total value
+      totalCartValue += finalRestaurantTotal;
     }
+
     // Clear the cart
     await Cart.deleteOne({ _id: cart._id });
     await user.save();
-    // // Send order confirmation SMS
+
+    // Send order confirmation SMS
     const message = await client.messages.create({
       body: `Hello ${user.name},\n\nYour order with ID ${orders[0]._id} has been successfully placed with Spicezy! Thank you for choosing us. We are excited to prepare your delicious meal and will keep you updated on the status of your order.\n\nIf you have any questions or need further assistance, feel free to contact us.\n\nBest regards,\nThe Spicezy Team`,
-      
-      from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
+      from: process.env.TWILIO_PHONE_NUMBER,
       to: user.mobile,
     });
+
     res.status(200).json({
       success: true,
       message: "Orders created successfully",
@@ -109,6 +111,7 @@ export const createOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // get orderby id
 export const getOrderById = async (req, res) => {
