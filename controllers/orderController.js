@@ -12,7 +12,7 @@ const client = twilio(accountSid, authToken);
 export const createOrder = async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
@@ -95,7 +95,8 @@ export const createOrder = async (req, res) => {
     await user.save();
     // // Send order confirmation SMS
     const message = await client.messages.create({
-      body: `Your order with ID ${orders[0]._id} has been successfully placed.`,
+      body: `Hello ${user.name},\n\nYour order with ID ${orders[0]._id} has been successfully placed with Spicezy! Thank you for choosing us. We are excited to prepare your delicious meal and will keep you updated on the status of your order.\n\nIf you have any questions or need further assistance, feel free to contact us.\n\nBest regards,\nThe Spicezy Team`,
+      
       from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
       to: user.mobile,
     });
