@@ -18,9 +18,9 @@ const userSchema = new mongoose.Schema({
     mobile: {
         type: String,
         required: true,
-        unique: true, 
-        match: /^[0-9]{10}$/, 
-    },
+        unique: true,
+        match: /^\+91[0-9]{10}$/, // Regex to validate E.164 format with +91 prefix
+      },
     profilePic: {
         type: String,
         default: "https://thumbs.dreamstime.com/b/creative-illustration-default-avatar-profile-placeholder-isolated-background-art-design-grey-photo-blank-template-mockup-144847501.jpg",
