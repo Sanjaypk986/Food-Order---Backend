@@ -3,6 +3,7 @@ import { Restaurant } from "../models/restaurantModel.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateToken.js";
 import { Order } from "../models/orderModel.js";
+import { Food } from "../models/foodModel.js";
 
 // create restaurant
 
@@ -169,16 +170,18 @@ export const restaurantProfile = async (req, res) => {
     const { restaurantId } = req.params;
     // find restaurant by id
     const restaurant = await Restaurant.findById(restaurantId).select(
-      "-password -orders -email"
+      "-password "
     );
 
     if (!restaurant) {
       return res.status(400).json({ message: "restaurant not found" });
     }
+    // Fetch the food items related to the restaurant
+    const foods = await Food.find({ restaurant: restaurant._id });
     res.status(200).json({
       success: true,
       message: "restaurant profile fetched",
-      data: restaurant,
+      data:{ restaurant,foods}
     });
   } catch (error) {
     // send error response
