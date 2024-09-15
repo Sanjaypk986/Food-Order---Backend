@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
+import { Restaurant } from "../models/restaurantModel.js";
 
-export const authRestaurant = (req, res, next) => {
+export const authRestaurant = async(req, res, next) => {
   try {
     // destructure token from cookies
     const { token } = req.cookies;
@@ -17,10 +18,19 @@ export const authRestaurant = (req, res, next) => {
         .status(401)
         .json({ succuss: false, message: "unauthoraized restaurant" });
     }
-    // to get restaurant data from jwt
-    req.restaurant = verifiedToken;
-    // next middleware function
-    next();
+        // Fetch restaurant from the database using the id from the token
+        const restaurant = await Restaurant.findOne({ email: verifiedToken.email })
+        .select("-password");
+  
+      if (!restaurant) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Restaurant not found" });
+      }
+  
+      // Attach Restaurant to the request object
+      req.restaurant = restaurant;
+      next();
   } catch (error) {
     res
     .status(error.status || 500)
