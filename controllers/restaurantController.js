@@ -12,6 +12,7 @@ export const restaurantCreate = async (req, res) => {
     // destructure values from req.body
     const { name, description, location, mobile, email, password, orders } =
       req.body;
+      
     // validation
     if (!name || !description || !mobile || !location || !email || !password) {
       return res
@@ -26,12 +27,16 @@ export const restaurantCreate = async (req, res) => {
         .json({ success: false, message: "restaurant already exist" });
     }
     // Upload image using cloudinary
-    const uploadResult = await cloudinaryInstance.uploader
+    let uploadResult;
+    if (req.file) {
+    uploadResult = await cloudinaryInstance.uploader
       .upload(req.file.path) //add path of file
       .catch((error) => {
         console.log(error);
       });
 
+    }
+    
     // password hasihng
     const salt = 10;
     const hashedPassword = bcrypt.hashSync(password, salt);
@@ -83,6 +88,7 @@ export const restaurantCreate = async (req, res) => {
 
 export const loginRestaurant = async (req, res) => {
   try {
+   
     // destructure values from req.body
     const { email, password } = req.body;
     // validation

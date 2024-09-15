@@ -27,7 +27,7 @@ const restaurantSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    match: /^[0-9]{10}$/,
+    match: /^\+91[0-9]{10}$/, // Regex to validate E.164 format with +91 prefix
   },
   image: {
     type: String,
