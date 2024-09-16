@@ -1,5 +1,5 @@
 import express from 'express'
-import { authRestaurantProfile, checkRestaurant, confirmOrder, getRestaurantOrders, getSingleOrder, loginRestaurant, logoutRestaurant, restaurantCreate, restaurantProfile, restaurantUpdate } from '../../controllers/restaurantController.js'
+import { authRestaurantProfile, checkRestaurant, getRestaurantOrders, getSingleOrder, loginRestaurant, logoutRestaurant, orderStatus, restaurantCreate, restaurantProfile, restaurantUpdate } from '../../controllers/restaurantController.js'
 import { upload } from '../../middlewares/uploadMiddleware.js'
 import { authRestaurant } from '../../middlewares/authRestaurant.js'
 import { getAllRestaurants } from '../../controllers/adminController.js'
@@ -19,7 +19,7 @@ router.get('/restaurant/profile',authRestaurant,authRestaurantProfile)
 router.get('/',getAllRestaurants)
 router.get('/orders',authRestaurant,getRestaurantOrders)
 router.get('/orders/:orderId',authRestaurant,getSingleOrder)
-router.patch('/orders/:orderId',authRestaurant,confirmOrder)
+router.patch('/orders/:orderId',authRestaurant,orderStatus)
 
 // check restaurant 
 

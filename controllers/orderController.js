@@ -112,7 +112,6 @@ export const createOrder = async (req, res) => {
   }
 };
 
-
 // get orderby id
 export const getOrderById = async (req, res) => {
   try {

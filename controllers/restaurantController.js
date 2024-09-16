@@ -244,19 +244,17 @@ export const restaurantUpdate = async (req, res) => {
 export const getRestaurantOrders = async (req, res) => {
   try {
     //  get restaurant from authRestaurant
-    const restaurantInfo = req.restaurant;
-    // find restaurant
-    const restaurant = await Restaurant.findOne({
-      email: restaurantInfo.email,
-    });
+    const restaurant = req.restaurant;
     if (!restaurant) {
       res.status(404).json({ message: "restaurant not found" });
     }
     // Populate orders with necessary details (food, status, total amount)
-    const orders = await Order.find({ _id: { $in: restaurant.orders } });
+    const orders = await Order.find({ _id: { $in: restaurant.orders } }).populate({
+      path: 'items.food', // Populate the 'food' field in 'items'
+    });
     res
       .status(200)
-      .json({ success: true, message: "orders list fetched", orders: orders });
+      .json({ success: true, message: "orders list fetched", data: orders });
   } catch (error) {
     res
       .status(error.status || 500)
@@ -288,26 +286,27 @@ export const getSingleOrder = async (req, res) => {
 };
 
 // confirm order
-export const confirmOrder = async (req, res) => {
+export const orderStatus = async (req, res) => {
   try {
     //  get orderId from params
     const { orderId } = req.params;
+    const {status} = req.body
+    
     // find order
     const confirmOrder = await Order.findById(orderId);
     if (!confirmOrder) {
       return res.status(404).json({ message: "order not found" });
     }
-    if (confirmOrder.status === "Confirmed") {
-      return res.status(400).json({ message: "already order confirmed" });
+    if (confirmOrder.status === "Cancelled") {
+      return res.status(400).json({ message: "already order Cancelled" });
     }
-    if (confirmOrder.status === "Pending") {
-      confirmOrder.status = "Confirmed";
+
+      confirmOrder.status = status;
       await confirmOrder.save();
-    }
 
     res
       .status(200)
-      .json({ success: true, message: "order confirmed", data: confirmOrder });
+      .json({ success: true, message: `Order status updated to ${status}`, data: confirmOrder });
   } catch (error) {
     res
       .status(error.status || 500)
