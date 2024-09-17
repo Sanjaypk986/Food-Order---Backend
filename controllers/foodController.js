@@ -4,8 +4,10 @@ import { Food } from "../models/foodModel.js";
 // create food
 export const foodCreate = async (req, res) => {
   try {
+      const restaurantInfo = req.restaurant
+      const restaurant = restaurantInfo._id
     // destructure values from req.body
-    const { name, description, category, price, restaurant } = req.body;
+    const { name, description, category, price} = req.body;
     // validation
     if (!name || !description || !price || !category || !restaurant) {
       return res
