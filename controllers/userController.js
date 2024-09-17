@@ -107,7 +107,6 @@ export const loginUser = async (req, res) => {
     // Check password
     const passwordMatch = bcrypt.compareSync(password, userExist.password);
     if (!passwordMatch) {
-      console.log("Unauthorized user or invalid password");
       return res.status(401).json({
         success: false,
         message: "Unauthorized user or invalid password",

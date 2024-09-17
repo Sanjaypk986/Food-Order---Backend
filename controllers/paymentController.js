@@ -30,8 +30,6 @@ export const checkoutPayment = async (req, res) => {
       line_items: lineItems, // Use the total sent from the frontend (don't recalculate)
     });
     
-    console.log("sesstionId ====" ,session.id);
-    
     res.json({ success: true, sessionId: session.id });
   } catch (error) {
     res
