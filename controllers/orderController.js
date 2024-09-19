@@ -28,7 +28,7 @@ export const createOrder = async (req, res) => {
         .json({ success: false, message: "Cart not found" });
     }
 
-    // Assume the cart total has been updated with any applied discount
+    // Use the cart total (which could include discounts)
     const updatedCartTotal = cart.total;
 
     // Group cart items by restaurant
@@ -41,9 +41,9 @@ export const createOrder = async (req, res) => {
       return acc;
     }, {});
 
-    const orders = [];
+    const restaurantOrders = [];
 
-    // Create orders for each restaurant
+    // Create a single order with multiple restaurant entries
     for (const restaurantId in itemsByRestaurant) {
       const items = itemsByRestaurant[restaurantId];
 
@@ -72,47 +72,49 @@ export const createOrder = async (req, res) => {
         };
       });
 
-      // Set the order total using the updated cart total (this doesn't split by restaurant)
-      const newOrder = new Order({
-        user: user._id,
+      // Add restaurant order to the main order
+      restaurantOrders.push({
         restaurant: restaurantId,
         items: validatedItems,
-        total: updatedCartTotal, // Storing the total as the cart total (discount applied)
+        restaurantTotal: restaurantTotal, // Each restaurant keeps its actual total
       });
+    }
 
-      await newOrder.save();
+    // Create the single order with the cart total
+    const newOrder = new Order({
+      user: user._id,
+      restaurants: restaurantOrders,
+      total: updatedCartTotal, // Use the cart total for the overall order total
+    });
 
+    await newOrder.save();
+
+    // Update restaurant and user orders
+    for (const restaurantId in itemsByRestaurant) {
       const restaurant = await Restaurant.findById(restaurantId);
       if (restaurant) {
         restaurant.orders.push(newOrder._id);
         await restaurant.save();
       }
-
-      user.orders.push(newOrder._id);
-      orders.push(newOrder);
     }
+
+    user.orders.push(newOrder._id);
+    await user.save();
 
     // Clear the cart
     const deleteCartResult = await Cart.deleteOne({ _id: cart._id });
-    if (deleteCartResult.deletedCount === 0) {
-      console.error("Cart was not deleted.");
-    } else {
-      console.log("Cart deleted successfully.");
-    }
-
-    await user.save();
 
     // Send order confirmation SMS
     const message = await client.messages.create({
-      body: `Hello ${user.name},\n\nYour order with ID ${orders[0]._id} has been successfully placed with Spicezy! Thank you for choosing us.`,
+      body: `Hello ${user.name},\n\nYour order with ID ${newOrder._id} has been successfully placed with Spicezy! Thank you for choosing us.`,
       from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
       to: user.mobile,
     });
 
     res.status(200).json({
       success: true,
-      message: "Orders created successfully",
-      orders,
+      message: "Order created successfully",
+      order: newOrder,
     });
   } catch (error) {
     console.error("Error creating order:", error.message);
@@ -146,68 +148,155 @@ export const getOrderById = async (req, res) => {
   }
 };
 
-// cancel order
+// cancel order by restaurant
 export const cancelOrder = async (req, res) => {
   try {
-    // desturcture order id
-    const { orderId } = req.params;
+    // Destructure orderId and restaurantId from request params
+    const { orderId, restaurantId } = req.params;
 
-    // find order
+    // Find the order
     const order = await Order.findById(orderId);
-    if (!orderId) {
+    if (!order) {
       return res
         .status(404)
-        .json({ sucess: false, message: " Order not found" });
+        .json({ success: false, message: "Order not found" });
     }
-    if (order.status === "Delivered" || order.status === "Confirmed") {
+
+    // Find the specific restaurant order
+    const restaurantOrder = order.restaurants.find(
+      (r) => r.restaurant.toString() === restaurantId
+    );
+    if (!restaurantOrder) {
       return res
         .status(404)
-        .json({ sucess: false, message: " Cannot cancel the order" });
+        .json({ success: false, message: "Restaurant order not found" });
     }
-    // change status to canceled
-    order.status = "Cancelled";
+
+    // Check if the restaurant order status can be changed
+    if (
+      restaurantOrder.status === "Delivered" ||
+      restaurantOrder.status === "Confirmed"
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Cannot cancel a confirmed or delivered order",
+        });
+    }
+
+    // Update the restaurant order status to cancelled
+    restaurantOrder.status = "Cancelled";
     await order.save();
 
     res
       .status(200)
-      .json({ success: true, message: "order cancel successfully" });
+      .json({
+        success: true,
+        message: "Restaurant order cancelled successfully",
+      });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+// all order cancel
+export const cancelCompleteOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Check if the main order status allows cancellation
+    if (order.status === "Delivered" || order.status === "Confirmed") {
+      return res.status(400).json({ success: false, message: "Cannot cancel the entire order" });
+    }
+
+    // Flags to determine if the main order can be cancelled
+    let allCancelled = true;
+    let allRestaurantOrdersDeliveredOrConfirmed = true;
+
+    // Check and update each restaurant order within the main order
+    for (let restaurantOrder of order.restaurants) {
+      if (
+        restaurantOrder.status === "Delivered" ||
+        restaurantOrder.status === "Confirmed"
+      ) {
+        allCancelled = false; // At least one restaurant order is not cancelled
+      } else if (restaurantOrder.status !== "Cancelled") {
+        // Update the restaurant order status to cancelled if not already cancelled
+        restaurantOrder.status = "Cancelled";
+      } else {
+        allCancelled = false; // If any restaurant order is not "Cancelled", set the flag to false
+      }
+
+      // Check if all restaurant orders are either delivered or confirmed
+      if (restaurantOrder.status !== "Delivered" && restaurantOrder.status !== "Confirmed") {
+        allRestaurantOrdersDeliveredOrConfirmed = false;
+      }
+    }
+
+    // If all restaurant orders are cancelled, set the main order status to cancelled
+    if (allCancelled) {
+      order.status = "Cancelled";
+    } else if (allRestaurantOrdersDeliveredOrConfirmed) {
+      // If all restaurant orders are delivered or confirmed, update the main order status to "Delivered"
+      order.status = "Delivered";
+    }
+
+    // Save the updated order
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order and restaurant orders updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 // get all orders by user
 export const myOrders = async (req, res) => {
   try {
-    // get from auth user
+    // Get the user from the request (auth)
     const user = req.user;
 
     if (!user) {
       return res
         .status(404)
-        .json({ sucess: false, message: " user not found" });
+        .json({ success: false, message: "User not found" });
     }
 
-    // find orders by user ID
+    // Find orders by user ID and populate restaurants and items
     const orders = await Order.find({ user: user._id })
       .populate({
-        path: "restaurant",
-        select: "-password -orders -email", // Exclude fields like password, orders, and email
+        path: "restaurants.restaurant", // Populate each restaurant in the order
+        select: "-password -orders -email", // remove fields
       })
       .populate({
-        path: "items.food", // Populate the food inside items
+        path: "restaurants.items.food", // Populate the food inside each restaurant's items
+        select: "name price image", // Select the required food fields
       });
+
     if (!orders || orders.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "No orders found" });
     }
+
     res.status(200).json({
       success: true,
-      message: "my order fetched  successfully",
+      message: "My orders fetched successfully",
       data: orders,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching orders:", error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

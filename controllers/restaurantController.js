@@ -12,7 +12,7 @@ export const restaurantCreate = async (req, res) => {
     // destructure values from req.body
     const { name, description, location, mobile, email, password, orders } =
       req.body;
-      
+
     // validation
     if (!name || !description || !mobile || !location || !email || !password) {
       return res
@@ -29,14 +29,13 @@ export const restaurantCreate = async (req, res) => {
     // Upload image using cloudinary
     let uploadResult;
     if (req.file) {
-    uploadResult = await cloudinaryInstance.uploader
-      .upload(req.file.path) //add path of file
-      .catch((error) => {
-        console.log(error);
-      });
-
+      uploadResult = await cloudinaryInstance.uploader
+        .upload(req.file.path) //add path of file
+        .catch((error) => {
+          console.log(error);
+        });
     }
-    
+
     // password hasihng
     const salt = 10;
     const hashedPassword = bcrypt.hashSync(password, salt);
@@ -88,7 +87,6 @@ export const restaurantCreate = async (req, res) => {
 
 export const loginRestaurant = async (req, res) => {
   try {
-   
     // destructure values from req.body
     const { email, password } = req.body;
     // validation
@@ -187,7 +185,7 @@ export const restaurantProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "restaurant profile fetched",
-      data:{ restaurant,foods}
+      data: { restaurant, foods },
     });
   } catch (error) {
     // send error response
@@ -243,22 +241,47 @@ export const restaurantUpdate = async (req, res) => {
 // get orders
 export const getRestaurantOrders = async (req, res) => {
   try {
-    //  get restaurant from authRestaurant
+    // Get the restaurant ID from the authenticated restaurant
     const restaurant = req.restaurant;
     if (!restaurant) {
-      res.status(404).json({ message: "restaurant not found" });
+      return res.status(404).json({ message: "Restaurant not found" });
     }
-    // Populate orders with necessary details (food, status, total amount)
-    const orders = await Order.find({ _id: { $in: restaurant.orders } }).populate({
-      path: 'items.food', // Populate the 'food' field in 'items'
+
+    // Find orders where the restaurant is part of the "restaurants" array
+    const orders = await Order.find({
+      "restaurants.restaurant": restaurant._id,
+    }).populate({
+      path: "restaurants.items.food", // Populate food details
+      select: "name price image", // Select necessary fields
     });
-    res
-      .status(200)
-      .json({ success: true, message: "orders list fetched", data: orders });
+
+    if (!orders || orders.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No orders found for this restaurant" });
+    }
+
+    // Include order._id in each restaurant order
+    const restaurantOrders = orders
+      .map((order) => {
+        const restaurantOrder = order.restaurants.find((rest) =>
+          rest.restaurant.equals(restaurant._id)
+        );
+        return restaurantOrder
+          ? { ...restaurantOrder.toObject(), orderId: order._id }
+          : null;
+      })
+      .filter((order) => order); // Remove null entries
+
+    res.status(200).json({
+      success: true,
+      message: "Orders list fetched",
+      data: restaurantOrders, // Send the orders with the included orderId
+    });
   } catch (error) {
-    res
-      .status(error.status || 500)
-      .json({ message: error.message || "Internal server error" });
+    res.status(error.status || 500).json({
+      message: error.message || "Internal server error",
+    });
   }
 };
 
@@ -288,25 +311,58 @@ export const getSingleOrder = async (req, res) => {
 // confirm order
 export const orderStatus = async (req, res) => {
   try {
-    //  get orderId from params
-    const { orderId } = req.params;
-    const {status} = req.body
+    const { status, orderId } = req.body; // Assume orderId is provided to identify which order to update
     
-    // find order
-    const confirmOrder = await Order.findById(orderId);
-    if (!confirmOrder) {
-      return res.status(404).json({ message: "order not found" });
-    }
-    if (confirmOrder.status === "Cancelled") {
-      return res.status(400).json({ message: "already order Cancelled" });
+    const restaurant = req.restaurant;
+
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
     }
 
-      confirmOrder.status = status;
-      await confirmOrder.save();
+    // Find the order where the restaurant is included
+    const order = await Order.findOne({
+      _id: orderId,
+      "restaurants.restaurant": restaurant._id,
+    });
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({
+          message: "Order not found or does not belong to this restaurant",
+        });
+    }
+
+    // Find the specific restaurant entry in the order's restaurants array
+    const restaurantEntry = order.restaurants.find((rest) =>
+      rest.restaurant.equals(restaurant._id)
+    );
+
+    if (!restaurantEntry) {
+      return res
+        .status(404)
+        .json({ message: "Restaurant entry not found in the order" });
+    }
+
+    if (restaurantEntry.status === "Cancelled") {
+      return res
+        .status(400)
+        .json({ message: "Order has already been cancelled" });
+    }
+
+    // Update the status of the restaurant entry
+    restaurantEntry.status = status;
+
+    // Save the updated order
+    await order.save();
 
     res
       .status(200)
-      .json({ success: true, message: `Order status updated to ${status}`, data: confirmOrder });
+      .json({
+        success: true,
+        message: `Order status updated to ${status}`,
+        data: order,
+      });
   } catch (error) {
     res
       .status(error.status || 500)
@@ -343,7 +399,7 @@ export const authRestaurantProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "restaurant profile fetched",
-      data:{ restaurant,foods}
+      data: { restaurant, foods },
     });
   } catch (error) {
     // send error response
