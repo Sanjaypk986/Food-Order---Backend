@@ -6,26 +6,41 @@ const orderSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  restaurant: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Restaurant',
-    required: true,
-  },
-  items: [{
-    food: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Food',
-      required: true,
-    },
-    quantity: {
-      type: Number,
-      required: true,
-    },
-    price: {
-      type: Number,
-      required: true,
+  restaurants: [
+    {
+      restaurant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Restaurant',
+        required: true,
+      },
+      items: [
+        {
+          food: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Food',
+            required: true,
+          },
+          quantity: {
+            type: Number,
+            required: true,
+          },
+          price: {
+            type: Number,
+            required: true,
+          }
+        }
+      ],
+      restaurantTotal: {
+        type: Number,
+        required: true,
+      },
+      status: {
+        type: String,
+        enum: ['Pending', 'Confirmed', 'Delivered', 'Cancelled'],
+        default: 'Pending',
+      }
     }
-  }],
+  ],
   total: {
     type: Number,
     required: true,
