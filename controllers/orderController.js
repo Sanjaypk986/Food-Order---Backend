@@ -32,22 +32,22 @@ export const createOrder = async (req, res) => {
     const updatedCartTotal = cart.total;
 
     // Group cart items by restaurant
-    const itemsByRestaurant = cart.items.reduce((acc, item) => {
-      const restaurantId = item.food.restaurant.toString();
-      if (!acc[restaurantId]) {
-        acc[restaurantId] = [];
+    const itemsByRestaurant = cart.items.reduce((acc, item) => {  //create grouping with restaurant
+      const restaurantId = item.food.restaurant.toString(); //assigned restaurantId (tis is key for grouping)
+      if (!acc[restaurantId]) { //checking our acc already have that restaurant
+        acc[restaurantId] = []; //if not create a empty array
       }
-      acc[restaurantId].push(item);
-      return acc;
+      acc[restaurantId].push(item); //push item o restaurant
+      return acc; //return updated acc
     }, {});
 
-    const restaurantOrders = [];
+    const restaurantOrders = []; // creating a empty array for storing orders
 
     // Create a single order with multiple restaurant entries
-    for (const restaurantId in itemsByRestaurant) {
-      const items = itemsByRestaurant[restaurantId];
+    for (const restaurantId in itemsByRestaurant) {  //for loop for getting all restaurantId from  itemsByRestaurant
+      const items = itemsByRestaurant[restaurantId]; //storing restuarntId 
 
-      if (items.length === 0) continue; // Skip empty item lists
+      if (items.length === 0) continue; // empty item lists condition (continue work as return)
 
       // Validate and calculate the total for the restaurant's order
       let restaurantTotal = 0;

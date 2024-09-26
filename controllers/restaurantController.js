@@ -10,7 +10,7 @@ import { Food } from "../models/foodModel.js";
 export const restaurantCreate = async (req, res) => {
   try {
     // destructure values from req.body
-    const { name, description, location, mobile, email, password, orders } =
+    const { name, description, location, mobile, email, password, orders ,category,makingTime } =
       req.body;
 
     // validation
@@ -48,6 +48,8 @@ export const restaurantCreate = async (req, res) => {
       mobile,
       description,
       orders,
+      category,
+      makingTime
     });
 
     // add image if available
@@ -200,7 +202,8 @@ export const restaurantProfile = async (req, res) => {
 export const restaurantUpdate = async (req, res) => {
   try {
     // destructure values from req.body
-    const { name, description, location, mobile } = req.body;
+    const { name, description, location, mobile ,category, makingTime} = req.body;
+    
     // get restaurant id from params
     const { restaurantId } = req.params;
 
@@ -210,6 +213,8 @@ export const restaurantUpdate = async (req, res) => {
       description,
       location,
       mobile,
+      category,
+      makingTime
     };
     // check req.file have image uploads
     if (req.file) {

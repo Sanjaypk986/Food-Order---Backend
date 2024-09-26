@@ -40,5 +40,15 @@ const restaurantSchema = new mongoose.Schema({
       ref: "Order",
     },
   ],
+  category: 
+    {
+      type: [String],
+      default:['South Indian ', ' North Indian']
+    },
+    makingTime: 
+    {
+      type: String,
+      default:'15-30 mins'
+    },
 });
 export const Restaurant = mongoose.model("Restaurant", restaurantSchema);
