@@ -32,9 +32,11 @@ export const createOrder = async (req, res) => {
     const updatedCartTotal = cart.total;
 
     // Group cart items by restaurant
-    const itemsByRestaurant = cart.items.reduce((acc, item) => {  //create grouping with restaurant
-      const restaurantId = item.food.restaurant.toString(); //assigned restaurantId (tis is key for grouping)
-      if (!acc[restaurantId]) { //checking our acc already have that restaurant
+    const itemsByRestaurant = cart.items.reduce((acc, item) => {
+      //create grouping with restaurant
+      const restaurantId = item.food.restaurant.toString(); //assigned restaurantId (this is key for grouping)
+      if (!acc[restaurantId]) {
+        //checking our acc already have that restaurant
         acc[restaurantId] = []; //if not create a empty array
       }
       acc[restaurantId].push(item); //push item o restaurant
@@ -44,16 +46,18 @@ export const createOrder = async (req, res) => {
     const restaurantOrders = []; // creating a empty array for storing orders
 
     // Create a single order with multiple restaurant entries
-    for (const restaurantId in itemsByRestaurant) {  //for loop for getting all restaurantId from  itemsByRestaurant
-      const items = itemsByRestaurant[restaurantId]; //storing restuarntId 
+    for (const restaurantId in itemsByRestaurant) {
+      //for loop for getting all restaurantId from  itemsByRestaurant
+      const items = itemsByRestaurant[restaurantId]; //storing restuarntId
 
       if (items.length === 0) continue; // empty item lists condition (continue work as return)
 
-      // Validate and calculate the total for the restaurant's order
+      // Validate and calculate the total for each restaurant's order
       let restaurantTotal = 0;
       const validatedItems = items.map((item) => {
-        const price = item.food.price;
+        const price = item.food.price; //store food price
         if (
+          //check price and quantity condition
           isNaN(price) ||
           price <= 0 ||
           isNaN(item.quantity) ||
@@ -64,7 +68,7 @@ export const createOrder = async (req, res) => {
           );
           throw new Error("Invalid item price or quantity");
         }
-        restaurantTotal += price * item.quantity;
+        restaurantTotal += price * item.quantity; //calculate restaurant total
         return {
           food: item.food,
           quantity: item.quantity,
@@ -91,18 +95,18 @@ export const createOrder = async (req, res) => {
 
     // Update restaurant and user orders
     for (const restaurantId in itemsByRestaurant) {
-      const restaurant = await Restaurant.findById(restaurantId);
+      const restaurant = await Restaurant.findById(restaurantId); //find restaurant using restaurantId
       if (restaurant) {
-        restaurant.orders.push(newOrder._id);
+        restaurant.orders.push(newOrder._id); //push order to restaurant array
         await restaurant.save();
       }
     }
 
-    user.orders.push(newOrder._id);
+    user.orders.push(newOrder._id); //order pushed to users orders array
     await user.save();
 
     // Clear the cart
-    const deleteCartResult = await Cart.deleteOne({ _id: cart._id });
+    const deleteCartResult = await Cart.deleteOne({ _id: cart._id }); //after order creating delete cart items
 
     // Send order confirmation SMS
     const message = await client.messages.create({
@@ -164,7 +168,8 @@ export const cancelOrder = async (req, res) => {
 
     // Find the specific restaurant order
     const restaurantOrder = order.restaurants.find(
-      (r) => r.restaurant.toString() === restaurantId
+      //find method loops restaurant single object
+      (r) => r.restaurant.toString() === restaurantId // find restaurant that same as restaurantId
     );
     if (!restaurantOrder) {
       return res
@@ -177,24 +182,20 @@ export const cancelOrder = async (req, res) => {
       restaurantOrder.status === "Delivered" ||
       restaurantOrder.status === "Confirmed"
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Cannot cancel a confirmed or delivered order",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Cannot cancel a confirmed or delivered order",
+      });
     }
 
     // Update the restaurant order status to cancelled
     restaurantOrder.status = "Cancelled";
     await order.save();
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Restaurant order cancelled successfully",
-      });
+    res.status(200).json({
+      success: true,
+      message: "Restaurant order cancelled successfully",
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -208,15 +209,19 @@ export const cancelCompleteOrder = async (req, res) => {
     // Find the order
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     // Check if the main order status allows cancellation
     if (order.status === "Delivered" || order.status === "Confirmed") {
-      return res.status(400).json({ success: false, message: "Cannot cancel the entire order" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot cancel the entire order" });
     }
 
-    // Flags to determine if the main order can be cancelled
+    //  determine if the main order can be cancelled
     let allCancelled = true;
     let allRestaurantOrdersDeliveredOrConfirmed = true;
 
@@ -231,15 +236,17 @@ export const cancelCompleteOrder = async (req, res) => {
         // Update the restaurant order status to cancelled if not already cancelled
         restaurantOrder.status = "Cancelled";
       } else {
-        allCancelled = false; // If any restaurant order is not "Cancelled", set the flag to false
+        allCancelled = false; // If any restaurant order is not "Cancelled", set to false
       }
 
       // Check if all restaurant orders are either delivered or confirmed
-      if (restaurantOrder.status !== "Delivered" && restaurantOrder.status !== "Confirmed") {
+      if (
+        restaurantOrder.status !== "Delivered" &&
+        restaurantOrder.status !== "Confirmed"
+      ) {
         allRestaurantOrdersDeliveredOrConfirmed = false;
       }
     }
-
     // If all restaurant orders are cancelled, set the main order status to cancelled
     if (allCancelled) {
       order.status = "Cancelled";
@@ -259,7 +266,6 @@ export const cancelCompleteOrder = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // get all orders by user
 export const myOrders = async (req, res) => {

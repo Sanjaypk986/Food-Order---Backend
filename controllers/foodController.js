@@ -150,15 +150,15 @@ export const deleteFood = async (req, res) => {
 // search foods
 export const searchFoods = async (req, res) => {
   try {
-    // Extract search parameters from the query string
+    // get parameters from the query 
     const { search, category, sort } = req.query;
 
-    // Build the query object based on provided search parameters
+    // Build a query object 
     const query = {};
 
     // Handle search query (case-insensitive search)
     if (search) {
-      query.name = new RegExp(search, "i");
+      query.name = new RegExp(search, "i");  //regular expression
     }
 
     // Handle category query
@@ -169,18 +169,18 @@ export const searchFoods = async (req, res) => {
     // Determine sort options
     let sortOptions = {};
     if (sort) {
-      sortOptions = { price: sort === 'asc' ? 1 : -1 };
+      sortOptions = { price: sort === 'asc' ? 1 : -1 };  //mongodb inbulit sorting
     }
 
-    // Fetch matching food items from the database with sorting
+    //find food items from the database 
     const foods = await Food.find(query).sort(sortOptions);
 
     // Respond with the results
     res.status(200).json({ success: true, foods });
   } catch (error) {
-    // Handle any errors
-    console.error("Error:", error.message); // Log the error for debugging
-    res.status(500).json({ message: "Internal Server Error" });
+    res
+    .status(error.status || 500)
+    .json({ message: error.message || "Internal server error" });
   }
 };
 

@@ -19,7 +19,7 @@ export const authuser = async (req, res, next) => {
         .json({ succuss: false, message: "unauthoraized user" });
     }
 
-    // Fetch user from the database using the id from the token
+    // fetch user from the database using the id from the token
     const user = await User.findOne({ email: verifiedToken.email })
       .select("-password")
       .populate("address");

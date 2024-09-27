@@ -2,7 +2,6 @@ import { Address } from "../models/addressModel.js";
 import { User } from "../models/userModel.js";
 
 // create address
-
 export const addressCreate = async (req, res) => {
   try {
     // destructure values from req.body
@@ -59,7 +58,6 @@ export const addressCreate = async (req, res) => {
 };
 
 // update address
-
 export const addressUpdate = async (req, res) => {
   try {
     // destructure values from req.body

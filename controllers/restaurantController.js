@@ -10,8 +10,17 @@ import { Food } from "../models/foodModel.js";
 export const restaurantCreate = async (req, res) => {
   try {
     // destructure values from req.body
-    const { name, description, location, mobile, email, password, orders ,category,makingTime } =
-      req.body;
+    const {
+      name,
+      description,
+      location,
+      mobile,
+      email,
+      password,
+      orders,
+      category,
+      makingTime,
+    } = req.body;
 
     // validation
     if (!name || !description || !mobile || !location || !email || !password) {
@@ -49,7 +58,7 @@ export const restaurantCreate = async (req, res) => {
       description,
       orders,
       category,
-      makingTime
+      makingTime,
     });
 
     // add image if available
@@ -202,8 +211,9 @@ export const restaurantProfile = async (req, res) => {
 export const restaurantUpdate = async (req, res) => {
   try {
     // destructure values from req.body
-    const { name, description, location, mobile ,category, makingTime} = req.body;
-    
+    const { name, description, location, mobile, category, makingTime } =
+      req.body;
+
     // get restaurant id from params
     const { restaurantId } = req.params;
 
@@ -214,7 +224,7 @@ export const restaurantUpdate = async (req, res) => {
       location,
       mobile,
       category,
-      makingTime
+      makingTime,
     };
     // check req.file have image uploads
     if (req.file) {
@@ -257,7 +267,7 @@ export const getRestaurantOrders = async (req, res) => {
       "restaurants.restaurant": restaurant._id,
     }).populate({
       path: "restaurants.items.food", // Populate food details
-      select: "name price image", // Select necessary fields
+      select: "name price image", 
     });
 
     if (!orders || orders.length === 0) {
@@ -276,7 +286,7 @@ export const getRestaurantOrders = async (req, res) => {
           ? { ...restaurantOrder.toObject(), orderId: order._id }
           : null;
       })
-      .filter((order) => order); // Remove null entries
+      .filter((order) => order); //filtering to remove its undefined
 
     res.status(200).json({
       success: true,
@@ -316,31 +326,29 @@ export const getSingleOrder = async (req, res) => {
 // confirm order
 export const orderStatus = async (req, res) => {
   try {
-    const { status, orderId } = req.body; // Assume orderId is provided to identify which order to update
-    
+    const { status, orderId } = req.body; 
+
     const restaurant = req.restaurant;
 
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    // Find the order where the restaurant is included
+    // find the order using order id and restaurant id
     const order = await Order.findOne({
       _id: orderId,
       "restaurants.restaurant": restaurant._id,
     });
 
     if (!order) {
-      return res
-        .status(404)
-        .json({
-          message: "Order not found or does not belong to this restaurant",
-        });
+      return res.status(404).json({
+        message: "Order not found or does not belong to this restaurant",
+      });
     }
 
-    // Find the specific restaurant entry in the order's restaurants array
+    // Find the restaurant order
     const restaurantEntry = order.restaurants.find((rest) =>
-      rest.restaurant.equals(restaurant._id)
+      rest.restaurant.equals(restaurant._id)  //comparing with restaurant._id
     );
 
     if (!restaurantEntry) {
@@ -361,13 +369,11 @@ export const orderStatus = async (req, res) => {
     // Save the updated order
     await order.save();
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: `Order status updated to ${status}`,
-        data: order,
-      });
+    res.status(200).json({
+      success: true,
+      message: `Order status updated to ${status}`,
+      data: order,
+    });
   } catch (error) {
     res
       .status(error.status || 500)

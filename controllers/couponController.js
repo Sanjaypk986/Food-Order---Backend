@@ -1,6 +1,5 @@
 import { Cart } from "../models/cartModel.js";
 import { Coupon } from "../models/couponModel.js";
-import { User } from "../models/userModel.js";
 
 // create coupon
 export const createCoupon = async (req, res) => {
@@ -94,7 +93,7 @@ export const updateCoupon = async (req, res) => {
 export const applyCoupon = async (req, res) => {
   try {
     const user = req.user;
-    const { code } = req.body;
+    const { code } = req.body; // get code from req.body
 
     if (!code) {
       return res
@@ -112,31 +111,31 @@ export const applyCoupon = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid coupon code" });
     }
 
-    const cart = await Cart.findOne({ user: user._id });
+    const cart = await Cart.findOne({ user: user._id }); //find cart
     if (!cart) {
       return res.status(404).json({ success: false, message: "Cart not found" });
     }
 
-    if (cart.couponApplied) {
+    if (cart.couponApplied) { // already applied coupon
       return res.status(400).json({
         success: false,
         message: "A coupon has already been applied",
       });
     }
 
-    let discount = 0;
+    let discount = 0;  //initialize discount
 
     // Coupon eligibility logic
-    if (code === "WELCOME50%") {
+    if (code === "WELCOME50%") {  // only first order coupon
       if (user.orders.length === 0) {
-        discount = cart.total * 0.5;
+        discount = cart.total * 0.5; // half the total
       } else {
         return res.status(400).json({
           success: false,
           message: "Coupon valid only for first order",
         });
       }
-    } else if (code === "ORDER500" && cart.total >= 500) {
+    } else if (code === "ORDER500" && cart.total >= 500) { //order above 500
       discount = 100;
     } else if (code === "ORDER1000" && cart.total >= 1000) {
       discount = 200;
@@ -148,8 +147,8 @@ export const applyCoupon = async (req, res) => {
     }
 
     // Apply discount
-    cart.total -= discount;
-    cart.total = Math.max(cart.total, 0); // Ensure total doesn't go negative
+    cart.total -= discount;  //minus the amount in total
+    cart.total = Math.max(cart.total, 0); // this method used for not going price to negative
     cart.couponApplied = true;
     await cart.save();
 
