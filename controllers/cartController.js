@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { Cart } from "../models/cartModel.js";
 import { Food } from "../models/foodModel.js";
-import { User } from "../models/userModel.js";
 
 // add items to crat
 export const addItem = async (req, res) => {
@@ -107,24 +106,24 @@ export const removeItemFromCart = async (req, res) => {
       return res.status(404).json({ success: false, message: "Cart not found" });
     }
 
-    const itemIndex = cart.items.findIndex(item => item.food.toString() === foodId);
+    const itemIndex = cart.items.findIndex(item => item.food.toString() === foodId); //find index of foodId
     if (itemIndex === -1) {
       return res.status(404).json({ success: false, message: "Item not found in cart" });
     }
 
-    cart.items.splice(itemIndex, 1);
+    cart.items.splice(itemIndex, 1); // splice is used to remove item form array.
 
     // Recalculate total
-    const itemIds = cart.items.map(item => item.food);
-    const foodItems = await Food.find({ _id: { $in: itemIds } });
-    const priceMap = foodItems.reduce((map, item) => {
-      map[item._id.toString()] = item.price;
+    const itemIds = cart.items.map(item => item.food); // stores all food ids
+    const foodItems = await Food.find({ _id: { $in: itemIds } }); // this query is used to  get the details of each food.
+    const priceMap = foodItems.reduce((map, item) => {  // reduce used to convert array into a object.
+      map[item._id.toString()] = item.price;   //store key as food id and value as food price.
       return map;
     }, {});
 
     let totalPrice = 0;
     cart.items.forEach(item => {
-      const price = priceMap[item.food.toString()];
+      const price = priceMap[item.food.toString()]; //Get the price from priceMap using the food Id
       totalPrice += item.quantity * (price || 0);
     });
 
@@ -142,13 +141,11 @@ export const removeItemFromCart = async (req, res) => {
   }
 };
 
-
 //   update the quantity of an item in the cart
 export const updateItemQuantity = async (req, res) => {
   try {
     // Destructure data from request body
     const { foodId, quantity } = req.body;
-    console.log(quantity);
     
     // Validate foodId
     if (!mongoose.Types.ObjectId.isValid(foodId)) {
@@ -273,4 +270,3 @@ export const getCartDetails = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-

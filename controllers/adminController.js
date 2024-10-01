@@ -217,7 +217,7 @@ export const restaurantDelete = async (req, res) => {
   }
 };
 
-// get all orders
+// Get all orders
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find({});
