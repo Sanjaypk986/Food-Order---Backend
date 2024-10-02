@@ -252,3 +252,32 @@ export const orderDelete = async (req, res) => {
       .json({ message: error.message || "Internal server error" });
   }
 };
+
+// chage restaurant status
+export const changeRestaurantStatus = async (req, res) => {
+  try {
+    // get restaurant id from params
+    const { restaurantId } = req.params;
+    // find restaurant by id
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      return res.status(400).json({ message: "restaurant not found" });
+    }
+    if (restaurant.status === "Active") {
+      restaurant.status = "Inactive"
+    }
+    else{
+      restaurant.status = "Active"
+    }
+    await restaurant.save()
+    res.status(200).json({
+      success: true,
+      message: "restaurant status changed successfully",
+    });
+  } catch (error) {
+    // send error response
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};
