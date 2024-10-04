@@ -50,7 +50,7 @@ const restaurantSchema = new mongoose.Schema({
       type: String,
       default:'15-30 mins'
     },
-    staus:{
+    status:{
       type: String,
       enum: ['Active', 'Inactive'],
         default: 'Active',

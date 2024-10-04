@@ -159,10 +159,11 @@ export const getAllUsers = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
+
     // Find and delete the user
     const deleteduser = await User.findByIdAndDelete(userId);
 
-    if (!user) {
+    if (!deleteduser) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
@@ -201,7 +202,7 @@ export const restaurantDelete = async (req, res) => {
     // get restaurant id from params
     const { restaurantId } = req.params;
     // find restaurant by id
-    const restaurant = await Order.findByIdAndDelete(restaurantId);
+    const restaurant = await Restaurant.findByIdAndDelete(restaurantId);
     if (!restaurant) {
       return res.status(400).json({ message: "restaurant not found" });
     }
@@ -220,7 +221,7 @@ export const restaurantDelete = async (req, res) => {
 // Get all orders
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find({});
+    const orders = await Order.find({}).populate("user");
     res
       .status(200)
       .json({ success: true, message: "orders list fetched", data: orders });
@@ -264,15 +265,16 @@ export const changeRestaurantStatus = async (req, res) => {
       return res.status(400).json({ message: "restaurant not found" });
     }
     if (restaurant.status === "Active") {
-      restaurant.status = "Inactive"
+      restaurant.status = "Inactive";
+    } else {
+      restaurant.status = "Active";
     }
-    else{
-      restaurant.status = "Active"
-    }
-    await restaurant.save()
+
+    await restaurant.save();
     res.status(200).json({
       success: true,
       message: "restaurant status changed successfully",
+      data: { status: restaurant.status },
     });
   } catch (error) {
     // send error response
