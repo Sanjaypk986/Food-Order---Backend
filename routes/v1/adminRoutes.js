@@ -1,5 +1,5 @@
 import express from 'express'
-import { adminCreate, checkAdmin, deleteUser, getAllRestaurants, getAllUsers, loginAdmin, logoutAdmin, orderDelete, restaurantDelete } from '../../controllers/adminController.js'
+import { adminCreate, changeRestaurantStatus, checkAdmin, deleteUser, getAllOrders, getAllRestaurants, getAllUsers, loginAdmin, logoutAdmin, orderDelete, restaurantDelete } from '../../controllers/adminController.js'
 import { authAdmin } from '../../middlewares/authAdmin.js'
 
 const router = express.Router()
@@ -10,14 +10,15 @@ router.get('/logout',logoutAdmin)
 
 // user
 router.get('/users',authAdmin,getAllUsers)
-router.delete('/users/delete/userId',authAdmin,deleteUser)
+router.delete('/users/delete/:userId',authAdmin,deleteUser)
 
 // restaurant
 router.get('/restaurants',getAllRestaurants)
-router.delete('restaurants/delete/:restaurantId',authAdmin,restaurantDelete)
+router.delete('/restaurants/delete/:restaurantId',authAdmin,restaurantDelete)
+router.patch('/restaurants/status/:restaurantId',authAdmin,changeRestaurantStatus)
 
 //orders
-router.get('/orders',authAdmin,getAllRestaurants)
+router.get('/orders',authAdmin,getAllOrders)
 router.delete('orders/delete/:orderId',authAdmin,orderDelete)
 
 // for front-end routing

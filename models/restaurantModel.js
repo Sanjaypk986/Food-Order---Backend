@@ -32,7 +32,7 @@ const restaurantSchema = new mongoose.Schema({
   image: {
     type: String,
     default:
-      "https://thumbs.wbm.im/pw/small/a652b5289b42e733469e0ec088a24eb1.jpg",
+      "https://lh3.googleusercontent.com/QAvQPtQv43Qxw97GLdPJmyhYqmFLOD1dY6GFCHTNQoDNy6bMSknpfdDRFOKicCKbIn5JjEJcqj4DujHhC6v7uGDA-1o=w1200-rw",
   },
   orders: [
     {
@@ -50,5 +50,10 @@ const restaurantSchema = new mongoose.Schema({
       type: String,
       default:'15-30 mins'
     },
+    status:{
+      type: String,
+      enum: ['Active', 'Inactive'],
+        default: 'Active',
+    }
 });
 export const Restaurant = mongoose.model("Restaurant", restaurantSchema);
