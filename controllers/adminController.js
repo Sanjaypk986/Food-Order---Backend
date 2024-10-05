@@ -283,3 +283,26 @@ export const changeRestaurantStatus = async (req, res) => {
       .json({ message: error.message || "Internal server error" });
   }
 };
+
+export const totalAmounts = async (req, res) => {
+  try {
+    const orders = await Order.find({});
+
+    if (!orders || orders.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Orders not available" });
+    }
+
+    // Calculate total amount
+    const totalCash = orders.reduce((total, order) => {
+      return total + (order.total || 0);
+    }, 0);
+
+    return res.status(200).json({ success: true, data: totalCash });
+  } catch (error) {
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};

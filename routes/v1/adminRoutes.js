@@ -1,5 +1,5 @@
 import express from 'express'
-import { adminCreate, changeRestaurantStatus, checkAdmin, deleteUser, getAllOrders, getAllRestaurants, getAllUsers, loginAdmin, logoutAdmin, orderDelete, restaurantDelete } from '../../controllers/adminController.js'
+import { adminCreate, changeRestaurantStatus, checkAdmin, deleteUser, getAllOrders, getAllRestaurants, getAllUsers, loginAdmin, logoutAdmin, orderDelete, restaurantDelete, totalAmounts } from '../../controllers/adminController.js'
 import { authAdmin } from '../../middlewares/authAdmin.js'
 
 const router = express.Router()
@@ -19,6 +19,7 @@ router.patch('/restaurants/status/:restaurantId',authAdmin,changeRestaurantStatu
 
 //orders
 router.get('/orders',authAdmin,getAllOrders)
+router.get('/orders/total-amount',authAdmin,totalAmounts)
 router.delete('orders/delete/:orderId',authAdmin,orderDelete)
 
 // for front-end routing

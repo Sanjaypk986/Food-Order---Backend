@@ -362,7 +362,7 @@ export const orderStatus = async (req, res) => {
         .status(400)
         .json({ message: "Order has already been cancelled" });
     }
-
+    
     // Update the status of the restaurant entry
     restaurantEntry.status = status;
 
