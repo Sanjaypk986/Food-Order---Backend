@@ -32,9 +32,11 @@ export const createOrder = async (req, res) => {
     const updatedCartTotal = cart.total;
 
     // Group cart items by restaurant
-    const itemsByRestaurant = cart.items.reduce((acc, item) => {  //create grouping with restaurant
+    const itemsByRestaurant = cart.items.reduce((acc, item) => {
+      //create grouping with restaurant
       const restaurantId = item.food.restaurant.toString(); //assigned restaurantId (this is key for grouping)
-      if (!acc[restaurantId]) { //checking our acc already have that restaurant
+      if (!acc[restaurantId]) {
+        //checking our acc already have that restaurant
         acc[restaurantId] = []; //if not create a empty array
       }
       acc[restaurantId].push(item); //push item o restaurant
@@ -44,8 +46,9 @@ export const createOrder = async (req, res) => {
     const restaurantOrders = []; // creating a empty array for storing orders
 
     // Create a single order with multiple restaurant entries
-    for (const restaurantId in itemsByRestaurant) {  //for loop for getting all restaurantId from  itemsByRestaurant
-      const items = itemsByRestaurant[restaurantId]; //storing restuarntId 
+    for (const restaurantId in itemsByRestaurant) {
+      //for loop for getting all restaurantId from  itemsByRestaurant
+      const items = itemsByRestaurant[restaurantId]; //storing restuarntId
 
       if (items.length === 0) continue; // empty item lists condition (continue work as return)
 
@@ -53,7 +56,8 @@ export const createOrder = async (req, res) => {
       let restaurantTotal = 0;
       const validatedItems = items.map((item) => {
         const price = item.food.price; //store food price
-        if ( //check price and quantity condition
+        if (
+          //check price and quantity condition
           isNaN(price) ||
           price <= 0 ||
           isNaN(item.quantity) ||
@@ -163,7 +167,8 @@ export const cancelOrder = async (req, res) => {
     }
 
     // Find the specific restaurant order
-    const restaurantOrder = order.restaurants.find( //find method loops restaurant single object
+    const restaurantOrder = order.restaurants.find(
+      //find method loops restaurant single object
       (r) => r.restaurant.toString() === restaurantId // find restaurant that same as restaurantId
     );
     if (!restaurantOrder) {
@@ -177,24 +182,20 @@ export const cancelOrder = async (req, res) => {
       restaurantOrder.status === "Delivered" ||
       restaurantOrder.status === "Confirmed"
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Cannot cancel a confirmed or delivered order",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Cannot cancel a confirmed or delivered order",
+      });
     }
 
     // Update the restaurant order status to cancelled
     restaurantOrder.status = "Cancelled";
     await order.save();
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Restaurant order cancelled successfully",
-      });
+    res.status(200).json({
+      success: true,
+      message: "Restaurant order cancelled successfully",
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -208,12 +209,16 @@ export const cancelCompleteOrder = async (req, res) => {
     // Find the order
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     // Check if the main order status allows cancellation
     if (order.status === "Delivered" || order.status === "Confirmed") {
-      return res.status(400).json({ success: false, message: "Cannot cancel the entire order" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot cancel the entire order" });
     }
 
     //  determine if the main order can be cancelled
@@ -235,7 +240,10 @@ export const cancelCompleteOrder = async (req, res) => {
       }
 
       // Check if all restaurant orders are either delivered or confirmed
-      if (restaurantOrder.status !== "Delivered" && restaurantOrder.status !== "Confirmed") {
+      if (
+        restaurantOrder.status !== "Delivered" &&
+        restaurantOrder.status !== "Confirmed"
+      ) {
         allRestaurantOrdersDeliveredOrConfirmed = false;
       }
     }
@@ -259,7 +267,6 @@ export const cancelCompleteOrder = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // get all orders by user
 export const myOrders = async (req, res) => {
@@ -298,5 +305,53 @@ export const myOrders = async (req, res) => {
   } catch (error) {
     console.error("Error fetching orders:", error.message);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateOrderStatusBasedOnRestaurants = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    // Find the order
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const allPending = order.restaurants.every(
+      (rest) => rest.status === "Pending"
+    );
+    // Check the status of all restaurants in the order
+    const allDelivered = order.restaurants.every(
+      (rest) => rest.status === "Delivered"
+    );
+
+    const allConfirmed = order.restaurants.every(
+      (rest) => rest.status === "Confirmed" || rest.status === "Delivered"
+    );
+
+    // If all restaurants have "Pending" status, set order status to "Pending"
+    if (allPending) {
+      order.status = "Pending";
+    }
+    if (allDelivered) {
+      order.status = "Delivered";
+    } else if (allConfirmed) {
+      order.status = "Confirmed";
+    }
+
+    // Save the updated order status
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Order status updated based on restaurant statuses`,
+      data: order,
+    });
+  } catch (error) {
+    return res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
   }
 };

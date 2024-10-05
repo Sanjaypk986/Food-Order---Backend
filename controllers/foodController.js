@@ -4,10 +4,10 @@ import { Food } from "../models/foodModel.js";
 // create food
 export const foodCreate = async (req, res) => {
   try {
-      const restaurantInfo = req.restaurant
-      const restaurant = restaurantInfo._id
+    const restaurantInfo = req.restaurant;
+    const restaurant = restaurantInfo._id;
     // destructure values from req.body
-    const { name, description, category, price} = req.body;
+    const { name, description, category, price } = req.body;
     // validation
     if (!name || !description || !price || !category || !restaurant) {
       return res
@@ -108,14 +108,16 @@ export const getFoodById = async (req, res) => {
 export const getAllFoods = async (req, res) => {
   try {
     // find foods
-    const getFoodList = await Food.find({})
-    .populate({
-      path: 'restaurant',
-      select: '-password -email -orders'  // Exclude these fields
+    const getFoodList = await Food.find({}).populate({
+      path: "restaurant",
+      select: "-password -email -orders", // Exclude these fields
     });
+    const foods = getFoodList.filter(
+      (food) => food.restaurant.status === "Active"
+    );
     res
       .status(200)
-      .json({ success: true, message: "food list fetched", data: getFoodList });
+      .json({ success: true, message: "food list fetched", data: foods });
   } catch (error) {
     // send error response
     res
@@ -150,15 +152,15 @@ export const deleteFood = async (req, res) => {
 // search foods
 export const searchFoods = async (req, res) => {
   try {
-    // get parameters from the query 
+    // get parameters from the query
     const { search, category, sort } = req.query;
 
-    // Build a query object 
+    // Build a query object
     const query = {};
 
     // Handle search query (case-insensitive search)
     if (search) {
-      query.name = new RegExp(search, "i");  //regular expression
+      query.name = new RegExp(search, "i"); //regular expression
     }
 
     // Handle category query
@@ -169,20 +171,17 @@ export const searchFoods = async (req, res) => {
     // Determine sort options
     let sortOptions = {};
     if (sort) {
-      sortOptions = { price: sort === 'asc' ? 1 : -1 };  //mongodb inbulit sorting
+      sortOptions = { price: sort === "asc" ? 1 : -1 }; //mongodb inbulit sorting
     }
 
-    //find food items from the database 
+    //find food items from the database
     const foods = await Food.find(query).sort(sortOptions);
 
     // Respond with the results
     res.status(200).json({ success: true, foods });
   } catch (error) {
     res
-    .status(error.status || 500)
-    .json({ message: error.message || "Internal server error" });
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
   }
 };
-
-
-
