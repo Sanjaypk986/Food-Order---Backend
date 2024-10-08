@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
 import { generateToken } from "../utils/generateToken.js";
 import { cloudinaryInstance } from "../config/cloudinaryConfig.js";
+import jwt from 'jsonwebtoken';
 
 // Transporter configuration for nodemailer
 const transporter = nodemailer.createTransport({
@@ -238,8 +239,10 @@ export const resetRequest = async (req, res) => {
   try {
     // destructure email
     const { email } = req.body;
+    
     // find user with email id
     const user = await User.findOne({ email });
+    
     if (!user) {
       return res
         .status(404)
@@ -249,6 +252,7 @@ export const resetRequest = async (req, res) => {
     const token = jwt.sign({ userId: user._id }, process.env.JWT_RESET_KEY, {
       expiresIn: "5m",
     });
+    
     // nodemailer configure
     const resetUrl = `${process.env.CLIENT_DOMAIN}/reset-password?token=${token}`;
     const mailOptions = {

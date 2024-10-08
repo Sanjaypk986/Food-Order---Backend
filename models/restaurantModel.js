@@ -53,7 +53,7 @@ const restaurantSchema = new mongoose.Schema({
     status:{
       type: String,
       enum: ['Active', 'Inactive'],
-        default: 'Active',
+        default: 'Inactive',
     }
 });
 export const Restaurant = mongoose.model("Restaurant", restaurantSchema);

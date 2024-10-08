@@ -4,6 +4,17 @@ import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateToken.js";
 import { Order } from "../models/orderModel.js";
 import { Food } from "../models/foodModel.js";
+import nodemailer from "nodemailer";
+import jwt from 'jsonwebtoken';
+
+// Transporter configuration for nodemailer
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.APP_PASSWORD,
+  },
+});
 
 // create restaurant
 
@@ -417,5 +428,109 @@ export const authRestaurantProfile = async (req, res) => {
     res
       .status(error.status || 500)
       .json({ message: error.message || "Internal server error" });
+  }
+};
+
+// reset password request
+export const restaurantResetRequest = async (req, res) => {
+  try {
+    // destructure email
+    const { email } = req.body;
+    
+    // find restaurant with email id
+    const restaurant = await Restaurant.findOne({ email });
+    
+    if (!restaurant) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Restaurant not found" });
+    }
+    // create a token using restaurant.id
+    const token = jwt.sign({ restaurantId: restaurant._id }, process.env.JWT_RESET_KEY, {
+      expiresIn: "5m",
+    });
+    
+    // nodemailer configure
+    const resetUrl = `${process.env.CLIENT_DOMAIN}/restaurant/reset-password?token=${token}`;
+    const mailOptions = {
+      to: restaurant.email,
+      from: process.env.EMAIL_USER,
+      subject: "Password Reset Request",
+      html: `
+            <html>
+              <head>
+                <style>
+                  body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f2f2f2;
+                    padding: 20px;
+                  }
+                  .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background-color: #ffffff;
+                    padding: 40px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                  }
+                  .button {
+                    display: inline-block;
+                    background-color: #007bff;
+                    color: #ffffff;
+                    text-decoration: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    margin-top: 20px;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <h2 style="text-align: center; color: #007bff;">Password Reset Request</h2>
+                  <p>Hello,</p>
+                  <p>You have requested to reset your password. Click the link below to proceed:</p>
+                  <p style="text-align: center;">
+                    <a href="${resetUrl}" class="button">Reset Password</a>
+                  </p>
+                  <p style="color: #666;">This link will expire in 5 minutes.</p>
+                  <p>If you did not request this, please ignore this email.</p>
+                </div>
+              </body>
+            </html>
+          `,
+    };
+    // send mail to restaurant
+    await transporter.sendMail(mailOptions);
+    res
+      .status(200)
+      .json({ success: true, message: "Password reset email sent" });
+  } catch (error) {
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Internal server error" });
+  }
+};
+
+// reset password
+export const restaurantResetPassword = async (req, res) => {
+  // destructure token and newpassword
+  const { token, newPassword } = req.body;
+  try {
+    // verify jwt token
+    const decoded = jwt.verify(token, process.env.JWT_RESET_KEY);
+    // find restaurant with restaurant.id from jwt verify
+    const restaurant = await Restaurant.findById(decoded.restaurantId);
+    // check restaurant available
+    if (!restaurant) {
+      return res.status(404).send("restaurant not found");
+    }
+    // change restaurant password using new password
+    restaurant.password = await bcrypt.hash(newPassword, 10);
+    // save restaurant
+    await restaurant.save();
+    res.send("Password reset successful");
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).send("Internal Server Error");
   }
 };
