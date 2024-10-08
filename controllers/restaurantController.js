@@ -5,7 +5,7 @@ import { generateToken } from "../utils/generateToken.js";
 import { Order } from "../models/orderModel.js";
 import { Food } from "../models/foodModel.js";
 import nodemailer from "nodemailer";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 // Transporter configuration for nodemailer
 const transporter = nodemailer.createTransport({
@@ -276,10 +276,18 @@ export const getRestaurantOrders = async (req, res) => {
     // Find orders where the restaurant is part of the "restaurants" array
     const orders = await Order.find({
       "restaurants.restaurant": restaurant._id,
-    }).populate({
-      path: "restaurants.items.food", // Populate food details
-      select: "name price image", 
-    });
+    })
+      .populate({
+        path: "restaurants.items.food", // Populate food details
+        select: "name price image",
+      })
+      .populate({
+        path: "user", // Populate user details
+        select: "-password -email -orders",
+        populate: {
+          path: "address", // Populate the address inside user
+        },
+      });
 
     if (!orders || orders.length === 0) {
       return res
@@ -294,7 +302,11 @@ export const getRestaurantOrders = async (req, res) => {
           rest.restaurant.equals(restaurant._id)
         );
         return restaurantOrder
-          ? { ...restaurantOrder.toObject(), orderId: order._id }
+          ? {
+              ...restaurantOrder.toObject(),
+              orderId: order._id,
+              user: order.user,
+            }
           : null;
       })
       .filter((order) => order); //filtering to remove its undefined
@@ -337,7 +349,7 @@ export const getSingleOrder = async (req, res) => {
 // confirm order
 export const orderStatus = async (req, res) => {
   try {
-    const { status, orderId } = req.body; 
+    const { status, orderId } = req.body;
 
     const restaurant = req.restaurant;
 
@@ -358,8 +370,8 @@ export const orderStatus = async (req, res) => {
     }
 
     // Find the restaurant order
-    const restaurantEntry = order.restaurants.find((rest) =>
-      rest.restaurant.equals(restaurant._id)  //comparing with restaurant._id
+    const restaurantEntry = order.restaurants.find(
+      (rest) => rest.restaurant.equals(restaurant._id) //comparing with restaurant._id
     );
 
     if (!restaurantEntry) {
@@ -373,7 +385,7 @@ export const orderStatus = async (req, res) => {
         .status(400)
         .json({ message: "Order has already been cancelled" });
     }
-    
+
     // Update the status of the restaurant entry
     restaurantEntry.status = status;
 
@@ -436,20 +448,24 @@ export const restaurantResetRequest = async (req, res) => {
   try {
     // destructure email
     const { email } = req.body;
-    
+
     // find restaurant with email id
     const restaurant = await Restaurant.findOne({ email });
-    
+
     if (!restaurant) {
       return res
         .status(404)
         .json({ success: false, message: "Restaurant not found" });
     }
     // create a token using restaurant.id
-    const token = jwt.sign({ restaurantId: restaurant._id }, process.env.JWT_RESET_KEY, {
-      expiresIn: "5m",
-    });
-    
+    const token = jwt.sign(
+      { restaurantId: restaurant._id },
+      process.env.JWT_RESET_KEY,
+      {
+        expiresIn: "5m",
+      }
+    );
+
     // nodemailer configure
     const resetUrl = `${process.env.CLIENT_DOMAIN}/restaurant/reset-password?token=${token}`;
     const mailOptions = {

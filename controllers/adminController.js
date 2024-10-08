@@ -161,17 +161,20 @@ export const deleteUser = async (req, res) => {
     const { userId } = req.params;
 
     // Find and delete the user
-    const deleteduser = await User.findByIdAndDelete(userId);
+    const deletedUser = await User.findByIdAndDelete(userId);
 
-    if (!deleteduser) {
+    if (!deletedUser) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
+    // Find and delete all orders associated with the user
+    await Order.deleteMany({ user: deletedUser._id });
+
     res.status(200).json({
       success: true,
       message: "users deleted successfully",
-      data: deleteduser,
+      data: deletedUser,
     });
   } catch (error) {
     res
