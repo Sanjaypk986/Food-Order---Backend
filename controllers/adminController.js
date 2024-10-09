@@ -111,8 +111,12 @@ export const loginAdmin = async (req, res) => {
 // logout admin
 export const logoutAdmin = async (req, res) => {
   try {
-    // clear token in cookie
-    res.clearCookie("token");
+    // Clear cookie
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
     res
       .status(200)
       .json({ success: true, message: "Admin logout successfully" });

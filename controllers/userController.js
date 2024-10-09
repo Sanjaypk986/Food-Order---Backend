@@ -143,11 +143,10 @@ export const loginUser = async (req, res) => {
 export const logoutUser = async (req, res) => {
   try {
     // Clear cookie
-    res.cookie("token", "", {
-      expires: new Date(0),
+    res.clearCookie("token", {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
+      sameSite: "None",
     });
     res
       .status(200)

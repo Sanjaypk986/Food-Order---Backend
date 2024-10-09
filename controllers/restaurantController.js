@@ -159,8 +159,12 @@ export const loginRestaurant = async (req, res) => {
 
 export const logoutRestaurant = async (req, res) => {
   try {
-    // clear token in cookie
-    res.clearCookie("token");
+    // Clear cookie
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
     res
       .status(200)
       .json({ success: true, message: "Restaurant logout successfully" });
